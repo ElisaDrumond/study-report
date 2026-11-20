@@ -11,12 +11,14 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { RefinementStyle } from '../../../lib/refinement';
+import type { Client } from '../../../lib/collection-types';
 import { categories, cleanEntry, fmt, follow, validateEntry } from '../../../lib/rules';
 import type { Entry, SavedReport, Task } from '../../../lib/types';
 import type { Tab } from './dashboard-model';
 import { route, today } from './dashboard-model';
 export function useDashboard() {
   const [tab, setTab] = useState<Tab>('central');
+  const [clients, setClients] = useState<Client[]>([]);
   const [date, setDate] = useState(today());
   const [records, setRecords] = useState<Entry[]>([]),
     [tasks, setTasks] = useState<Task[]>([]),
@@ -68,10 +70,16 @@ export function useDashboard() {
   const notice = (msg: string) => setToast(msg);
   const refresh = useCallback(async () => {
     try {
-      const [r, t, h] = await Promise.all([route('records'), route('tasks'), route('reports')]);
+      const [r, t, h, operations] = await Promise.all([
+        route('records'),
+        route('tasks'),
+        route('reports'),
+        route('operations'),
+      ]);
       setRecords(r);
       setTasks(t);
       setHistory(h);
+      setClients(operations.clients);
     } catch (e) {
       notice((e as Error).message);
     } finally {
@@ -81,6 +89,22 @@ export function useDashboard() {
   useEffect(() => {
     refresh();
   }, [refresh]);
+
+  // Clients added in the operational view must be available when returning to activities.
+  useEffect(() => {
+    if (tab !== 'activities') return;
+    let active = true;
+    route('operations')
+      .then((operations) => {
+        if (active) setClients(operations.clients);
+      })
+      .catch((error) => {
+        if (active) setToast((error as Error).message);
+      });
+    return () => {
+      active = false;
+    };
+  }, [tab]);
   const filtered = useMemo(
     () =>
       records
@@ -134,7 +158,8 @@ export function useDashboard() {
   ];
   async function saveRecord() {
     if (!editing) return;
-    const r = cleanEntry(editing);
+    const selectedClient = clients.find((client) => client.id === editing.clientId);
+    const r = cleanEntry({ ...editing, name: selectedClient?.name || editing.name });
     const errors = validateEntry(r);
     if (errors.length) {
       notice('Corrija o registro: ' + errors.join('; '));
@@ -298,6 +323,7 @@ export function useDashboard() {
     ['history', 'Histórico', BookOpen],
   ];
   return {
+    clients,
     navOpen,
     navigation,
     tab,

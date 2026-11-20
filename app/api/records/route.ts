@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db, getEntries, saveEntry } from '../../../lib/db';
+import { read } from '../../../lib/database/operations-repository';
+import type { Client } from '../../../lib/collection-types';
 import { cleanEntry, validateEntry } from '../../../lib/rules';
 export const runtime = 'nodejs';
 export async function GET() {
@@ -8,6 +10,15 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const r = cleanEntry(await request.json());
+    if (r.clientId) {
+      const client = read<Client>(db(), 'op_clients').find(
+        (candidate) => candidate.id === r.clientId,
+      );
+      if (!client) {
+        return NextResponse.json({ error: 'Cliente vinculado não encontrado' }, { status: 400 });
+      }
+      r.name = client.name;
+    }
     const errors = validateEntry(r);
     if (errors.length) return NextResponse.json({ error: errors.join('; ') }, { status: 400 });
     saveEntry(r);

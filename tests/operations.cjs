@@ -87,6 +87,50 @@ const payment = (db, overrides = {}) =>
     db,
     '2026-11-20',
   );
+test('importação CSV cria ou atualiza clientes sem tocar em parcelas e é transacional', () => {
+  const database = memory();
+  const rows = [
+    { id: 'c', name: 'Cliente Teste', crmRef: 'CRM1', notes: 'Atualizado' },
+    { id: '', name: 'Cliente Novo', crmRef: 'CRM-N', notes: '' },
+  ];
+  const updated = mutateOperation({ type: 'import_clients', rows }, database, '2026-11-20');
+  assert.equal(updated.clients.length, 2);
+  assert.equal(updated.installments.length, 1);
+  assert.equal(updated.clients.find((customer) => customer.id === 'c').notes, 'Atualizado');
+  const imported = updated.clients.find((customer) => customer.name === 'Cliente Novo');
+  const second = mutateOperation(
+    { type: 'import_clients', rows: [{ id: imported.id, name: imported.name, crmRef: 'CRM-N', notes: '' }] },
+    database,
+    '2026-11-20',
+  );
+  assert.equal(second.clients.length, 2);
+  assert.equal(second.clients.find((customer) => customer.id === imported.id).id, imported.id);
+  assert.throws(
+    () => mutateOperation({
+      type: 'import_clients',
+      rows: [
+        { id: '', name: 'Terceiro', crmRef: '', notes: '' },
+        { id: 'nonexistent', name: 'Invalido', crmRef: '', notes: '' },
+      ],
+    }, database, '2026-11-20'),
+    /desconhecido/,
+  );
+  assert.equal(snapshot(database).clients.length, 2);
+  database.close();
+});
+
+test('migração de vínculo com clientes não apaga atividades legadas e é idempotente', () => {
+  const { migrateEntryClientIds } = require('../.test-build/db');
+  const database = new Database(':memory:');
+  database.exec("CREATE TABLE entries(id TEXT, name TEXT); INSERT INTO entries VALUES('a', 'Legado')");
+  migrateEntryClientIds(database);
+  migrateEntryClientIds(database);
+  const columns = database.prepare('PRAGMA table_info(entries)').all().map((column) => column.name);
+  assert(columns.includes('clientId'));
+  assert.equal(database.prepare('SELECT name FROM entries').get().name, 'Legado');
+  database.close();
+});
+
 test('calendário: sexta-feira, feriado segunda, recesso e sábado útil', () => {
   assert.equal(
     calendar.operationToday('America/Sao_Paulo', new Date('2026-11-21T01:00:00Z')),

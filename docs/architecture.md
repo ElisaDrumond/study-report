@@ -33,6 +33,20 @@ external consumers have been checked.
 
 Avoid adding a second state store or an abstraction layer solely to match a folder convention.
 
+## Clients CSV import/export and activity links
+
+The operational client registry is the source of truth for customer identity.
+The CSV export includes stable client IDs, names, CRM references, status, current
+installment counts, balance and notes. Import only accepts ID, name, CRM and notes;
+financial status, installments, balances, payments and activity history cannot be
+changed by importing a client CSV. Unknown IDs and ambiguous matches are rejected,
+and the entire batch is transactional. Empty CRM/notes cells do not clear existing data. Imports are confirmed before
+execution and reject mismatched identities instead of silently merging clients.
+
+Financial entries have an optional, persisted `clientId` column added by an
+idempotent SQLite migration. Linked activities resolve by ID even after a client rename.
+Unlinked historical activities still use unique-name matching as a fallback.
+
 ## Existing contracts to protect
 
 - Preserve the SQLite schema and the migration/backup behavior.

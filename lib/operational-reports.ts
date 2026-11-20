@@ -20,13 +20,17 @@ export function buildOperationalReport(
 ) {
   const names = new Map(state.clients.map((c) => [c.id, c.name]));
   const entries = legacy.map((r) => {
-    const matches = state.clients.filter((c) =>
-      [c.name, ...(c.legacyNames || [])].some(
-        (name) =>
-          name.trim().toLocaleLowerCase('pt-BR') === r.name.trim().toLocaleLowerCase('pt-BR'),
-      ),
-    );
-    return { ...r, clientId: matches.length === 1 ? matches[0].id : undefined };
+    const matches = r.clientId
+      ? state.clients.filter((client) => client.id === r.clientId)
+      : state.clients.filter((client) =>
+          [client.name, ...(client.legacyNames || [])].some(
+            (name) =>
+              name.trim().toLocaleLowerCase('pt-BR') === r.name.trim().toLocaleLowerCase('pt-BR'),
+          ),
+        );
+    return matches.length === 1
+      ? { ...r, clientId: matches[0].id, name: matches[0].name }
+      : { ...r, clientId: undefined };
   });
   const operations: Entry[] = state.activities
     .filter((a) => a.date === date && a.source !== 'legacy')

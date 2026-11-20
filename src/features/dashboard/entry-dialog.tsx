@@ -11,12 +11,13 @@ import {
   statuses,
 } from '../../../lib/rules';
 import type { Action, Category, Status } from '../../../lib/types';
+import type { Client } from '../../../lib/collection-types';
 import type { DashboardController } from './use-dashboard';
 type Props = Pick<
   DashboardController,
   'setEditing' | 'records' | 'editing' | 'saving' | 'saveRecord'
->;
-export default function EntryDialog({ setEditing, records, editing, saving, saveRecord }: Props) {
+> & { clients: Client[] };
+export default function EntryDialog({ setEditing, records, editing, saving, saveRecord, clients }: Props) {
   if (!editing) return null;
   return (
     <div
@@ -41,10 +42,33 @@ export default function EntryDialog({ setEditing, records, editing, saving, save
           <label className={`${styles.field} ${styles.wide}`}>
             Nome do cliente *
             <input
+              list="registered-clients"
               value={editing.name}
-              onChange={(e) => setEditing({ ...editing, name: e.target.value })}
-              placeholder="Nome completo"
+              onChange={(event) => {
+                const name = event.target.value;
+                const matches = clients.filter(
+                  (client) =>
+                    client.name.toLocaleLowerCase('pt-BR') ===
+                    name.trim().toLocaleLowerCase('pt-BR'),
+                );
+                setEditing({
+                  ...editing,
+                  name,
+                  clientId: matches.length === 1 ? matches[0].id : '',
+                });
+              }}
+              placeholder="Digite para buscar um cliente cadastrado"
             />
+            <datalist id="registered-clients">
+              {clients.map((client) => (
+                <option key={client.id} value={client.name} />
+              ))}
+            </datalist>
+            <small>
+              {editing.clientId
+                ? 'Vinculado ao cadastro da carteira operacional.'
+                : 'Sem vínculo: selecione uma sugestão ou cadastre o cliente na carteira.'}
+            </small>
           </label>
           <label className={styles.field}>
             Categoria

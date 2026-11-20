@@ -18,11 +18,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Origem não permitida' }, { status: 403 });
   try {
     const raw = await request.text();
-    if (raw.length > 100000)
+    if (raw.length > 2000000)
       return NextResponse.json({ error: 'Solicitação muito extensa' }, { status: 413 });
     const command = JSON.parse(raw);
     if (!command || typeof command !== 'object' || Array.isArray(command))
       throw Error('Solicitação inválida');
+    if (raw.length > 100000 && command.type !== 'import_clients')
+      return NextResponse.json({ error: 'Solicitação muito extensa' }, { status: 413 });
     return NextResponse.json(mutateOperation(command));
   } catch (error) {
     return NextResponse.json(

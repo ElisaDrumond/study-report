@@ -1,5 +1,6 @@
 'use client';
-import { Plus } from 'lucide-react';
+import { Download, Plus, Upload } from 'lucide-react';
+import { exportClientsCsv, parseClientsCsv } from '../../../lib/client-csv';
 import op from '../../../app/operations.module.css';
 import styles from '../../../app/page.module.css';
 import { isOverdue, outstandingCents } from '../../../lib/collection-status';
@@ -34,6 +35,29 @@ export default function ClientsPanel({
   today,
   historyClient,
 }: Props) {
+  const downloadClients = () => {
+    const csv = exportClientsCsv(operationsState.clients, operationsState.installments);
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'study-work-clientes.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const uploadClients = async (file: File) => {
+    try {
+      if (file.size > 2_000_000) throw Error('Arquivo CSV muito grande (máximo 2 MB)');
+      const rows = parseClientsCsv(await file.text());
+      if (!window.confirm(
+        `Importar ${rows.length} clientes? Cadastros existentes poderão receber atualizações de nome, CRM e observações. Parcelas e pagamentos serão preservados.`,
+      )) return;
+      await run({ type: 'import_clients', rows });
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Falha ao importar CSV');
+    }
+  };
+
   return (
     <>
       <section className={styles.card}>
@@ -43,6 +67,23 @@ export default function ClientsPanel({
             <h2>Clientes e parcelas</h2>
           </div>
           <div className={op.actions}>
+            <button className={styles.secondary} onClick={downloadClients} disabled={!operationsState.clients.length}>
+              <Download size={16} /> Exportar clientes CSV
+            </button>
+            <label className={styles.secondary}>
+              <Upload size={16} /> Importar clientes CSV
+              <input
+                type="file"
+                accept=".csv,text/csv"
+                hidden
+                disabled={busy}
+                onChange={async (event) => {
+                  const file = event.target.files?.[0];
+                  event.target.value = '';
+                  if (file) await uploadClients(file);
+                }}
+              />
+            </label>
             <button
               className={styles.secondary}
               disabled={busy}

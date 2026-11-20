@@ -47,12 +47,14 @@ export function snapshot(database = defaultDb()): OperationSnapshot {
   if (columns.has('action'))
     for (const r of database.prepare('SELECT * FROM entries').all() as Entry[]) {
       if (validateEntry(r).length || r.action === 'none') continue;
-      const matches = clients.filter((c) =>
-        [c.name, ...(c.legacyNames || [])].some(
-          (name) =>
-            name.trim().toLocaleLowerCase('pt-BR') === r.name.trim().toLocaleLowerCase('pt-BR'),
-        ),
-      );
+      const matches = r.clientId
+        ? clients.filter((client) => client.id === r.clientId)
+        : clients.filter((client) =>
+            [client.name, ...(client.legacyNames || [])].some(
+              (name) =>
+                name.trim().toLocaleLowerCase('pt-BR') === r.name.trim().toLocaleLowerCase('pt-BR'),
+            ),
+          );
       if (matches.length !== 1) continue;
       const channel = (
         {

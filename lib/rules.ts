@@ -172,6 +172,7 @@ export function cleanEntry(raw: Partial<Entry>): Entry {
     : defaultStatus[effectiveCategory];
   return {
     id: String(raw.id || crypto.randomUUID()),
+    clientId: typeof raw.clientId === 'string' ? raw.clientId.trim() : '',
     name: String(raw.name || '').trim(),
     category: effectiveCategory,
     action,

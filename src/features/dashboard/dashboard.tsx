@@ -19,6 +19,7 @@ import { useDashboard } from './use-dashboard';
 export default function Dashboard() {
   const controller = useDashboard();
   const {
+    clients,
     navOpen,
     navigation,
     tab,
@@ -218,6 +219,7 @@ export default function Dashboard() {
         <EntryDialog
           setEditing={setEditing}
           records={records}
+          clients={clients}
           editing={editing}
           saving={saving}
           saveRecord={saveRecord}
