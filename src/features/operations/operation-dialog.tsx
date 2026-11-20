@@ -88,6 +88,59 @@ export default function OperationDialog({
                   <Field label="Referência externa CRM">
                     <input name="crmRef" defaultValue={activeDialog.client?.crmRef} />
                   </Field>
+                  <Field label="Tipo de negócio / O que comprou" wide>
+                    <textarea
+                      name="purchaseDescription"
+                      rows={2}
+                      maxLength={500}
+                      placeholder="Ex.: Curso profissionalizante de elétrica"
+                      defaultValue={activeDialog.client?.paymentTerms?.purchaseDescription ?? ''}
+                    />
+                  </Field>
+                  <Field label="Quantidade de parcelas contratadas">
+                    <input
+                      name="installmentCount"
+                      type="number"
+                      min="1"
+                      max="240"
+                      step="1"
+                      placeholder="Ex.: 12"
+                      defaultValue={activeDialog.client?.paymentTerms?.installmentCount ?? ''}
+                    />
+                  </Field>
+                  <Field label="Periodicidade do pagamento">
+                    <select
+                      name="frequency"
+                      defaultValue={activeDialog.client?.paymentTerms?.frequency ?? 'monthly'}
+                    >
+                      <option value="monthly">Mensal</option>
+                      <option value="biweekly">A cada 15 dias</option>
+                      <option value="weekly">Semanal</option>
+                      <option value="one_time">Pagamento único</option>
+                    </select>
+                  </Field>
+                  <Field label="Dia habitual do vencimento (mensal)">
+                    <input
+                      name="dueDay"
+                      type="number"
+                      min="1"
+                      max="31"
+                      step="1"
+                      placeholder="Ex.: 5"
+                      defaultValue={activeDialog.client?.paymentTerms?.dueDay ?? ''}
+                    />
+                  </Field>
+                  <Field label="Data do primeiro vencimento (opcional)">
+                    <input
+                      name="firstDueDate"
+                      type="date"
+                      defaultValue={activeDialog.client?.paymentTerms?.firstDueDate ?? ''}
+                    />
+                  </Field>
+                  <div className={`${styles.note} ${styles.wide}`}>
+                    Estas são condições contratuais informativas. O sistema não cria parcelas,
+                    confirma pagamentos, altera vencimentos ou aplica multas a partir deste cadastro.
+                  </div>
                   <Field label="Observações" wide>
                     <textarea name="notes" defaultValue={activeDialog.client?.notes} />
                   </Field>

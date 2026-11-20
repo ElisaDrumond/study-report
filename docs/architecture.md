@@ -47,6 +47,19 @@ Financial entries have an optional, persisted `clientId` column added by an
 idempotent SQLite migration. Linked activities resolve by ID even after a client rename.
 Unlinked historical activities still use unique-name matching as a fallback.
 
+## Contract terms for future collection scheduling
+
+Clients can optionally store a free-form purchase description, contracted installment
+count, frequency (monthly / every 15 days / weekly / one-time), recurring monthly
+due-day (1–31), and first due date. These fields are editable in the client dialog,
+visible in the client history and round-trip through CSV. CSV imports patch only
+nonempty fields and validate constraints; existing payment data is untouched.
+
+These terms are **not** recorded installments, and neither due-day nor count
+automatically creates receivables, confirms payments, changes dates or applies
+penalties. A future workflow should explicitly create and review installments and
+handle short months, exceptions, manual payment confirmations and approved charges.
+
 ## Existing contracts to protect
 
 - Preserve the SQLite schema and the migration/backup behavior.

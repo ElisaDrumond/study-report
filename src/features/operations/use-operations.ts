@@ -188,7 +188,16 @@ export function useOperations(view: 'central' | 'clients' | 'calendar') {
       awaitingReply: data.get('awaitingReply') === 'on',
     };
     try {
-      if (dialog.type === 'save_client') command.id = dialog.client?.id;
+      if (dialog.type === 'save_client') {
+        command.id = dialog.client?.id;
+        command.paymentTerms = {
+          purchaseDescription: String(data.get('purchaseDescription') ?? ''),
+          installmentCount: String(data.get('installmentCount') ?? ''),
+          frequency: String(data.get('frequency') ?? 'monthly'),
+          dueDay: String(data.get('dueDay') ?? ''),
+          firstDueDate: String(data.get('firstDueDate') ?? ''),
+        };
+      }
       if (dialog.type === 'save_installment') {
         command.id = dialog.installment?.id;
         command.amountCents = cents(data.get('amount'));

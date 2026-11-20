@@ -1,5 +1,6 @@
 import { type Client } from '../../collection-types';
 import type { ImportedClientRow } from '../../client-csv';
+import { mergePaymentTerms, parsePaymentTerms } from '../../client-payment-terms';
 import { audit, getLegacyNames, put } from '../../database/operations-repository';
 import { text } from '../../validation/operation-values';
 import type { OperationContext } from '../operation-context';
@@ -57,6 +58,7 @@ export function handleClientCommand(type: string, context: OperationContext) {
             name,
             crmRef: crmRef || old.crmRef,
             notes: notes || old.notes,
+            paymentTerms: mergePaymentTerms(old.paymentTerms, row),
             legacyNames: old.name === name
               ? old.legacyNames
               : [...new Set([old.name, ...(old.legacyNames || [])])],
@@ -66,6 +68,7 @@ export function handleClientCommand(type: string, context: OperationContext) {
             name,
             crmRef,
             notes,
+            paymentTerms: mergePaymentTerms(undefined, row),
             financialStatus: 'current',
             serviceStatus: 'active',
             createdAt: now,
@@ -111,6 +114,9 @@ export function handleClientCommand(type: string, context: OperationContext) {
       name: text(command.name, 'Nome', true),
       crmRef: text(command.crmRef ?? '', 'Referência CRM'),
       notes: text(command.notes ?? '', 'Observações'),
+      paymentTerms: command.paymentTerms === undefined
+        ? old?.paymentTerms
+        : parsePaymentTerms(command.paymentTerms),
       financialStatus: old?.financialStatus || 'current',
       serviceStatus: old?.serviceStatus || 'active',
       createdAt: old?.createdAt || now,

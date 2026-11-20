@@ -6,6 +6,11 @@ export type ImportedClientRow = {
   name: string;
   crmRef: string;
   notes: string;
+  purchaseDescription?: string;
+  installmentCount?: string;
+  frequency?: string;
+  dueDay?: string;
+  firstDueDate?: string;
 };
 
 const header = [
@@ -17,6 +22,11 @@ const header = [
   'Total de parcelas',
   'Saldo registrado (BRL)',
   'Observações',
+  'O que comprou',
+  'Quantidade de parcelas contratadas',
+  'Periodicidade',
+  'Dia do vencimento',
+  'Primeiro vencimento',
 ];
 
 function escapeCell(value: string | number) {
@@ -41,6 +51,11 @@ export function exportClientsCsv(clients: Client[], installments: Installment[])
       relevant.length,
       (balance / 100).toFixed(2).replace('.', ','),
       client.notes,
+      client.paymentTerms?.purchaseDescription ?? '',
+      client.paymentTerms?.installmentCount ?? '',
+      client.paymentTerms?.frequency ?? '',
+      client.paymentTerms?.dueDay ?? '',
+      client.paymentTerms?.firstDueDate ?? '',
     ];
   });
   return '\uFEFF' + [header, ...rows].map((row) => row.map(escapeCell).join(';')).join('\r\n');
@@ -96,6 +111,11 @@ export function parseClientsCsv(source: string): ImportedClientRow[] {
   const idColumn = find('id do cliente', 'id', 'clientid');
   const crmColumn = find('referencia crm', 'crm', 'crmref');
   const notesColumn = find('observacoes', 'observacao', 'notas');
+  const descriptionColumn = find('o que comprou', 'tipo de negocio', 'negocio contratado');
+  const countColumn = find('quantidade de parcelas contratadas', 'quantidade de parcelas', 'parcelas contratadas');
+  const frequencyColumn = find('periodicidade', 'frequencia');
+  const dueDayColumn = find('dia do vencimento', 'dia habitual do vencimento');
+  const firstDueDateColumn = find('primeiro vencimento', 'data do primeiro vencimento');
   if (nameColumn < 0) throw Error('O CSV precisa de uma coluna Nome');
   if (matrix.length > 5001) throw Error('Limite de 5.000 clientes por arquivo');
 
@@ -111,6 +131,11 @@ export function parseClientsCsv(source: string): ImportedClientRow[] {
       name,
       crmRef: field(crmColumn),
       notes: field(notesColumn),
+      ...(field(descriptionColumn) ? { purchaseDescription: field(descriptionColumn) } : {}),
+      ...(field(countColumn) ? { installmentCount: field(countColumn) } : {}),
+      ...(field(frequencyColumn) ? { frequency: field(frequencyColumn) } : {}),
+      ...(field(dueDayColumn) ? { dueDay: field(dueDayColumn) } : {}),
+      ...(field(firstDueDateColumn) ? { firstDueDate: field(firstDueDateColumn) } : {}),
     };
   });
 }

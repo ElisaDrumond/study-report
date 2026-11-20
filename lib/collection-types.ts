@@ -1,9 +1,11 @@
 import type { CalendarException } from './business-calendar';
+import type { ClientPaymentTerms } from './client-payment-terms';
 export type ServiceStatus = 'active' | 'block_pending' | 'blocked' | 'unblock_pending';
 export type Client = {
   id: string;
   name: string;
   crmRef: string;
+  paymentTerms?: ClientPaymentTerms;
   financialStatus: 'current' | 'overdue' | 'external';
   serviceStatus: ServiceStatus;
   notes: string;

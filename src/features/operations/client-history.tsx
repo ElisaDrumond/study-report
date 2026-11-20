@@ -62,6 +62,31 @@ export default function ClientHistory({
           <X />
         </button>
       </div>
+      {client.paymentTerms && (
+        <div className={styles.note}>
+          <div>
+            <strong>Negócio contratado</strong>
+            <p>{client.paymentTerms.purchaseDescription || 'Não informado'}</p>
+            <p>
+              {client.paymentTerms.installmentCount ?? 'Quantidade não informada'} parcela(s)
+              {' · '}
+              {({
+                monthly: 'Mensal',
+                biweekly: 'A cada 15 dias',
+                weekly: 'Semanal',
+                one_time: 'Pagamento único',
+              } as const)[client.paymentTerms.frequency]}
+              {client.paymentTerms.dueDay
+                ? ` · Vencimento habitual: dia ${client.paymentTerms.dueDay}`
+                : ''}
+              {client.paymentTerms.firstDueDate
+                ? ` · Primeiro vencimento: ${fmt(client.paymentTerms.firstDueDate)}`
+                : ''}
+            </p>
+            <small>Condições cadastradas; parcelas e pagamentos são controlados separadamente.</small>
+          </div>
+        </div>
+      )}
       <p>{client.notes}</p>
       <div className={op.actions}>
         <button
