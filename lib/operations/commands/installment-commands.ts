@@ -28,7 +28,11 @@ export function handleInstallmentCommand(type: string, context: OperationContext
         dueDate: draft.dueDate,
         paidDate: '',
         paidCents: 0,
-        verificationStatus: draft.dueDate < today ? 'unverified' : 'verified',
+        // The operator explicitly confirms the historical paid installments
+        // in this wizard; remaining overdue installments become eligible for
+        // current follow-up without another generic review step.
+        verificationStatus: 'verified',
+        collectionStartDate: draft.dueDate < today ? today : undefined,
         status: 'open',
         chargesCents: 0,
         chargeStatus: 'verify',

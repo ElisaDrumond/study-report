@@ -128,8 +128,11 @@ an effective receipt date, exact amount received in USD, and explicit charges.
 Historical payment data is validated server-side against the schedule before
 any writing; all installments are inserted in the existing single transaction.
 The paid ones are verified, settled and annotated with `historicalPaid`; they
-never create outstanding collection tasks. Remaining installments stay unverified
-and do not enter the collection queue until individually reviewed.
+never create outstanding collection tasks. Remaining past-due installments are
+classified as verified and open by the operator's confirmed selection; follow-up
+starts at the present business date. A 60+ day old outstanding installment
+triggers the option to evaluate external collection alongside continued follow-up
+every two business days.
 
 Amounts above the original installment require matching recorded charges.
 Amounts below the due balance (partials / discounts) cannot silently be marked

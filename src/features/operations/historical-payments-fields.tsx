@@ -22,8 +22,10 @@ export default function HistoricalPaymentsFields({ plan, today }: Props) {
         multa/encargos específicos em USD.
       </p>
       <p>
-        Parcelas não marcadas permanecerão com a situação a verificar, sem cobrança automática.
-        Cadastrar histórico antigo não será contado como atividade realizada hoje.
+        As parcelas vencidas não marcadas serão consideradas em aberto e entrarão no
+        acompanhamento atual. A Central sugerirá cobranças ou avaliação externa conforme
+        o atraso, sem enviar mensagens automaticamente. O cadastro histórico não será
+        contado como atividade realizada hoje.
       </p>
       {past.map((item) => {
         const checked = selected.includes(item.number);
@@ -48,7 +50,7 @@ export default function HistoricalPaymentsFields({ plan, today }: Props) {
                   Vencimento {fmt(item.dueDate)} · Original {money(item.amountCents)}
                 </small>
               </span>
-              <span className={op.historicalState}>{checked ? 'Já foi paga' : 'A verificar'}</span>
+              <span className={op.historicalState}>{checked ? 'Já foi paga' : 'Em aberto'}</span>
             </label>
             {checked && (
               <div className={op.historicalFields}>
