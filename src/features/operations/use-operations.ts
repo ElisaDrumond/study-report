@@ -116,7 +116,7 @@ export function useOperations(view: 'central' | 'clients' | 'calendar') {
       'Casos para análise da gestão',
       new Set(
         active
-          .filter((t) => ['management', 'renegotiate', 'external_review'].includes(t.kind))
+          .filter((t) => ['management', 'renegotiate'].includes(t.kind))
           .map((t) => t.clientId),
       ).size,
     ],
@@ -224,6 +224,7 @@ export function useOperations(view: 'central' | 'clients' | 'calendar') {
       if (dialog.type === 'confirm_payment') command.amountCents = cents(data.get('amount'));
       if (dialog.type === 'save_negotiation') {
         command.id = dialog.negotiation?.id;
+        command.scope = data.get('scope');
         command.installmentIds = data.getAll('installmentIds');
       }
       if (dialog.type === 'save_calendar') command.id = dialog.exceptionId;

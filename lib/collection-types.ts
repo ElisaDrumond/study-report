@@ -35,6 +35,8 @@ export type Negotiation = {
   id: string;
   clientId: string;
   installmentIds: string[];
+  scope?: 'overdue' | 'remaining' | 'custom';
+  balanceAtProposalCents?: number;
   requestedDate: string;
   proposal: string;
   status:

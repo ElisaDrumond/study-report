@@ -153,6 +153,23 @@ after the window, not on the same day as its follow-up.
 Old backdated receipts are excluded from reporting and from creating
 post-payment CRM/receipt tasks that would misrepresent past work.
 
+## One collection task and scoped negotiations
+
+The Central displays one actionable collection-follow-up card rather than
+an extra external-review task. At the configurable 60-day threshold the
+same follow-up card offers an optional, explicitly confirmed external
+collection referral (revalidated server-side). A generic "completion" is
+not used for collection contacts. Scheduling persists the task for a future
+business day; simply scheduling is not an activity counted in reports.
+
+With at least two overdue installments, the suggested contact displays
+their consolidated outstanding **overdue** balance, excluding future debt.
+Renegotiations explicitly select overdue installments, all remaining
+unpaid contract installments (including future ones), or custom selection.
+Scope and the balance snapshot are saved and validated server-side.
+No change to installment amounts, due dates or payments is inferred from
+opening a proposal.
+
 ## Existing contracts to protect
 
 - Preserve the SQLite schema and the migration/backup behavior.

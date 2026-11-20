@@ -1,5 +1,5 @@
 import { getNextCollectionDate, shiftDate } from '../../business-calendar';
-import { isOverdue } from '../../collection-status';
+import { daysOverdue, isOverdue, outstandingCents } from '../../collection-status';
 import { audit, put } from '../../database/operations-repository';
 import { date, money, pick, text } from '../../validation/operation-values';
 import type { OperationContext } from '../operation-context';
@@ -17,7 +17,7 @@ export function handleTaskCommand(type: string, context: OperationContext) {
       status: 'deferred' as const,
       dueDate: due,
       deferRequestedDate: date(command.dueDate),
-      deferReason: text(command.reason, 'Justificativa', true),
+      deferReason: text(command.reason ?? '', 'Motivo') || 'Agendamento manual',
     };
     put(database, 'op_pending', task);
     audit(database, 'pending', task.id, old, task, task.deferReason);
@@ -26,7 +26,8 @@ export function handleTaskCommand(type: string, context: OperationContext) {
       installmentId: old.installmentId,
       taskId: old.id,
       action: 'task_deferred',
-      result: `Tarefa adiada para ${due}, com justificativa registrada.`,
+      reportScope: 'administrative',
+      result: `Tarefa agendada para ${due}.`,
     });
   } else if (
     [
@@ -53,11 +54,17 @@ export function handleTaskCommand(type: string, context: OperationContext) {
     if (p && p.clientId !== c.id) throw Error('Parcela incompatível com o cliente');
     if (type === 'external') {
       if (command.confirmed !== true) throw Error('Encaminhamento externo exige confirmação');
+      const overdue = state.installments.filter(
+        (item) => item.clientId === c.id && isOverdue(item, today),
+      );
+      if (!overdue.length || Math.max(...overdue.map((item) => daysOverdue(item, today))) < state.settings.externalReviewDays)
+        throw Error('Encaminhamento externo disponível somente após o limite de atraso');
       text(command.notes, 'Justificativa', true);
+      const balance = overdue.reduce((total, item) => total + outstandingCents(item), 0);
       const a = activity({
         clientId: c.id,
         action: 'external_collection',
-        result: 'Encaminhamento externo confirmado manualmente.',
+        result: `Encaminhamento externo confirmado manualmente. ${overdue.length} parcelas vencidas, saldo US$ ${(balance / 100).toFixed(2)}.`,
       });
       const next = { ...c, financialStatus: 'external' as const };
       put(database, 'op_clients', next);
@@ -169,6 +176,12 @@ export function handleTaskCommand(type: string, context: OperationContext) {
         throw Error(
           'Confira primeiro o pagamento agendado e registre o resultado antes de novo contato de cobrança',
         );
+      const overdue = contact
+        ? state.installments.filter((item) => item.clientId === c.id && isOverdue(item, today))
+        : [];
+      const consolidated = overdue.length >= 2
+        ? `${overdue.length} parcelas vencidas; saldo vencido US$ ${(overdue.reduce((sum, item) => sum + outstandingCents(item), 0) / 100).toFixed(2)}. `
+        : '';
       const a = activity({
         clientId: c.id,
         installmentId: p?.id || '',
@@ -176,7 +189,7 @@ export function handleTaskCommand(type: string, context: OperationContext) {
         action: contact ? 'contact' : task?.kind || 'manual',
         contact,
         channel,
-        result: text(command.result, 'Resultado', true),
+        result: consolidated + text(command.result, 'Resultado', true),
         status: command.awaitingReply ? 'awaiting_reply' : 'recorded',
       });
       if (task && (type === 'complete_task' || contactKinds.includes(task.kind))) resolve(task, a);

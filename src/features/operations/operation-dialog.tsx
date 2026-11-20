@@ -8,6 +8,7 @@ import { negotiationLabels, outstandingCents } from '../../../lib/collection-sta
 import Field from '../../components/ui/form-field';
 import { amountInput, channelLabels, money } from './operations-presenters';
 import HistoricalPaymentsFields from './historical-payments-fields';
+import NegotiationScopeFields from './negotiation-scope-fields';
 import type { OperationsController } from './use-operations';
 type Props = Pick<
   OperationsController,
@@ -324,25 +325,12 @@ export default function OperationDialog({
               )}
               {activeDialog.type === 'save_negotiation' && (
                 <>
-                  <Field label="Parcelas envolvidas" wide>
-                    <select
-                      name="installmentIds"
-                      multiple
-                      required
-                      size={4}
-                      defaultValue={selectedNegotiation?.installmentIds || []}
-                    >
-                      {operationsState.installments
-                        .filter((installment) => installment.clientId === activeDialog.client?.id)
-                        .map((installment) => (
-                          <option key={installment.id} value={installment.id}>
-                            {installment.reference} · {installment.number} ·{' '}
-                            {money(outstandingCents(installment))}
-                          </option>
-                        ))}
-                    </select>
-                    <small>Use Ctrl para selecionar mais de uma parcela.</small>
-                  </Field>
+                  <NegotiationScopeFields
+                    clientId={activeDialog.client?.id || ''}
+                    state={operationsState}
+                    today={today}
+                    existing={selectedNegotiation}
+                  />
                   <Field label="Data da solicitação">
                     <input
                       name="requestedDate"
@@ -463,7 +451,7 @@ export default function OperationDialog({
               )}
               {activeDialog.type === 'defer_task' && (
                 <>
-                  <Field label="Nova data (ajustada para o próximo dia útil)">
+                  <Field label="Data agendada (ajustada ao próximo dia útil)">
                     <input
                       name="dueDate"
                       type="date"
@@ -472,8 +460,8 @@ export default function OperationDialog({
                       defaultValue={shiftDate(today, 1)}
                     />
                   </Field>
-                  <Field label="Justificativa" wide>
-                    <textarea name="reason" required />
+                  <Field label="Motivo ou observação (opcional)" wide>
+                    <textarea name="reason" placeholder="Ex.: contato na próxima terça-feira" />
                   </Field>
                 </>
               )}
