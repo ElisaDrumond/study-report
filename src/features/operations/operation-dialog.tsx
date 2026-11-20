@@ -108,11 +108,11 @@ export default function OperationDialog({
                       defaultValue={activeDialog.client?.paymentTerms?.installmentCount ?? ''}
                     />
                   </Field>
-                  <Field label="Valor de cada parcela (R$)">
+                  <Field label="Valor de cada parcela (US$)">
                     <input
                       name="installmentAmount"
                       inputMode="decimal"
-                      placeholder="Ex.: 350,00"
+                      placeholder="Ex.: 350.00"
                       defaultValue={activeDialog.client?.paymentTerms?.installmentAmountCents
                         ? amountInput(activeDialog.client.paymentTerms.installmentAmountCents)
                         : ''}
@@ -175,7 +175,7 @@ export default function OperationDialog({
                       defaultValue={selectedInstallment?.number || 1}
                     />
                   </Field>
-                  <Field label="Valor original (R$)">
+                  <Field label="Valor original (US$)">
                     <input
                       name="amount"
                       inputMode="decimal"
@@ -193,7 +193,7 @@ export default function OperationDialog({
                       defaultValue={selectedInstallment?.dueDate || today}
                     />
                   </Field>
-                  <Field label="Encargos registrados (R$)">
+                  <Field label="Encargos registrados (US$)">
                     <input
                       name="charges"
                       inputMode="decimal"
@@ -236,7 +236,7 @@ export default function OperationDialog({
                     esta parcela. Saldo em aberto:{' '}
                     {money(selectedInstallment ? outstandingCents(selectedInstallment) : 0)}.
                   </div>
-                  <Field label="Valor recebido nesta confirmação (R$)">
+                  <Field label="Valor recebido nesta confirmação (US$)">
                     <input
                       name="amount"
                       inputMode="decimal"
@@ -463,7 +463,7 @@ export default function OperationDialog({
                           <option value="applied">Aplicado manualmente conforme contrato</option>
                         </select>
                       </Field>
-                      <Field label="Encargo efetivamente registrado (R$)">
+                      <Field label="Encargo efetivamente registrado (US$)">
                         <input name="charges" required defaultValue="0.00" inputMode="decimal" />
                       </Field>
                     </>

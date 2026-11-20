@@ -68,6 +68,14 @@ API validates the relationship. Selecting a parcel records the context of an act
 it does **not** mark a payment as received, change a balance, or apply penalties.
 Receipts remain explicit operational confirmations.
 
+## Currency and initial verification terminology
+
+All customer balances, installment values and CSV amounts are in **USD** (US$).
+Values in cents are preserved as-is: this does not perform exchange-rate
+conversion or rewrite existing ledger amounts. "Conciliação" remains the
+separate task performed in the Study system; initial local payment-status
+verification is not counted as that Study task.
+
 ## Existing contracts to protect
 
 - Preserve the SQLite schema and the migration/backup behavior.

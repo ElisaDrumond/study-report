@@ -123,10 +123,10 @@ export function handleInstallmentCommand(type: string, context: OperationContext
       clientId: p.clientId,
       installmentId: p.id,
       action: 'payment_confirmed',
-      category: 'conciliation',
+      category: 'payment',
       status: settled ? 'paid' : 'partial',
       amountCents,
-      result: `Conciliação registrada: ${formatCurrency(amountCents)}. ${settled ? 'Parcela quitada.' : 'Pagamento parcial; saldo permanece aberto.'} Data do pagamento: ${paidDate}.`,
+      result: `Pagamento confirmado no controle local: ${formatCurrency(amountCents)}. ${settled ? 'Parcela quitada.' : 'Pagamento parcial; saldo permanece aberto.'} Data do pagamento: ${paidDate}.`,
     });
     if (settled)
       for (const task of state.pending.filter(

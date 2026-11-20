@@ -9,7 +9,7 @@ export const negotiationLabels = {
   cancelled: 'Cancelada',
 };
 export const formatCurrency = (cents: number) =>
-  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(cents / 100);
+  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'USD' }).format(cents / 100);
 export const outstandingCents = (p: Installment) =>
   Math.max(0, p.amountCents + (p.chargeStatus === 'applied' ? p.chargesCents : 0) - p.paidCents);
 export const isUnpaid = (p: Installment) =>

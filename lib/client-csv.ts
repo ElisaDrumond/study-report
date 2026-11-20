@@ -1,6 +1,6 @@
 import type { Client, Installment } from './collection-types';
 import { outstandingCents } from './collection-status';
-import { parseBRLToCents } from './money-input';
+import { parseUSDToCents } from './money-input';
 
 export type ImportedClientRow = {
   id: string;
@@ -22,11 +22,11 @@ const header = [
   'Status financeiro',
   'Status atendimento',
   'Total de parcelas',
-  'Saldo registrado (BRL)',
+  'Saldo registrado (USD)',
   'Observações',
   'O que comprou',
   'Quantidade de parcelas contratadas',
-  'Valor de cada parcela (R$)',
+  'Valor de cada parcela (USD)',
   'Periodicidade',
   'Dia do vencimento',
   'Primeiro vencimento',
@@ -117,7 +117,7 @@ export function parseClientsCsv(source: string): ImportedClientRow[] {
   const notesColumn = find('observacoes', 'observacao', 'notas');
   const descriptionColumn = find('o que comprou', 'tipo de negocio', 'negocio contratado');
   const countColumn = find('quantidade de parcelas contratadas', 'quantidade de parcelas', 'parcelas contratadas');
-  const amountColumn = find('valor de cada parcela (r$)', 'valor da parcela', 'valor por parcela');
+  const amountColumn = find('valor de cada parcela (usd)', 'valor da parcela', 'valor por parcela');
   const frequencyColumn = find('periodicidade', 'frequencia');
   const dueDayColumn = find('dia do vencimento', 'dia habitual do vencimento');
   const firstDueDateColumn = find('primeiro vencimento', 'data do primeiro vencimento');
@@ -138,7 +138,7 @@ export function parseClientsCsv(source: string): ImportedClientRow[] {
       notes: field(notesColumn),
       ...(field(descriptionColumn) ? { purchaseDescription: field(descriptionColumn) } : {}),
       ...(field(countColumn) ? { installmentCount: field(countColumn) } : {}),
-      ...(field(amountColumn) ? { installmentAmountCents: String(parseBRLToCents(field(amountColumn))) } : {}),
+      ...(field(amountColumn) ? { installmentAmountCents: String(parseUSDToCents(field(amountColumn))) } : {}),
       ...(field(frequencyColumn) ? { frequency: field(frequencyColumn) } : {}),
       ...(field(dueDayColumn) ? { dueDay: field(dueDayColumn) } : {}),
       ...(field(firstDueDateColumn) ? { firstDueDate: field(firstDueDateColumn) } : {}),

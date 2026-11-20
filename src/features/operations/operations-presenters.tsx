@@ -15,7 +15,7 @@ export const empty: OperationSnapshot = {
   settings: defaultSettings,
 };
 export const money = (cents: number) =>
-  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(cents / 100);
+  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'USD' }).format(cents / 100);
 export const amountInput = (cents: number) => (cents / 100).toFixed(2);
 export function cents(value: FormDataEntryValue | null) {
   const raw = String(value ?? '')
@@ -35,12 +35,13 @@ export const serviceLabels = {
 };
 export const financialLabels = {
   current: 'Sem parcela vencida',
+  verification_pending: 'Situação a verificar',
   overdue: 'Inadimplente',
   external: 'Cobrança externa',
 };
 export const activityLabels: Record<string, string> = {
   contact: 'Contato registrado',
-  payment_confirmed: 'Conciliação / pagamento confirmado',
+  payment_confirmed: 'Pagamento confirmado',
   payment_scheduled: 'Agendamento registrado',
   payment_not_found: 'Pagamento não localizado',
   service_blocked: 'Bloqueio confirmado',

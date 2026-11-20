@@ -51,9 +51,9 @@ export function buildOperationalReport(
         action: Action = 'other_action',
         status: Status = 'none';
       if (a.action === 'payment_confirmed') {
-        category = a.status === 'paid' ? 'payment' : 'conciliation';
-        action = a.status === 'paid' ? 'payment_checked' : 'conciliation_done';
-        status = a.status === 'paid' ? 'payment_confirmed' : 'monitoring';
+        category = 'payment';
+        action = 'payment_checked';
+        status = a.status === 'paid' ? 'payment_confirmed' : 'closed';
       } else if (a.contact) {
         category = 'current';
         action = (
