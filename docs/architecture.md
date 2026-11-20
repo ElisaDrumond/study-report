@@ -95,6 +95,13 @@ standard modal rather than the browser's native confirmation prompt.
 Operator defaults to Elisa Anjo. Task deferrals are recorded as operational
 activities on the date of the human action, with audit metadata preserved.
 
+## Currency
+
+The entire operational financial workflow uses USD. Amounts are stored in integer
+cents, displayed as US$ and exported as USD. This is a currency-label correction,
+**not** an exchange-rate conversion. Reconciliation is solely a separately recorded
+task in Study's official system and is never inferred from payment-status verification.
+
 ## Existing contracts to protect
 
 - Preserve the SQLite schema and the migration/backup behavior.

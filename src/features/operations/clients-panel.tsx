@@ -169,6 +169,9 @@ export default function ClientsPanel({
                           .filter((p) => p.status !== 'cancelled')
                           .reduce((n, p) => n + outstandingCents(p), 0),
                       )}
+                      {c.financialStatus === 'verification_pending' && (
+                        <small className={op.detail}>Saldo contratual ainda não verificado</small>
+                      )}
                     </td>
                     <td>
                       <button

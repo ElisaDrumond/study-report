@@ -171,6 +171,40 @@ test('pagamento confirmado não equivale à conciliação da Study', () => {
   database.close();
 });
 
+test('atividade operacional aparece na lista sem duplicar o relatório', () => {
+  const { operationalActivityEntries } = require('../.test-build/operational-reports');
+  const stateWithActivity = state({
+    activities: [{
+      id: 'event-1',
+      clientId: 'c',
+      installmentId: 'p',
+      action: 'contact',
+      category: 'operational',
+      status: 'recorded',
+      occurredAt: '2026-11-20T15:00:00.000Z',
+      date: '2026-11-20',
+      channel: 'whatsapp',
+      notes: '',
+      result: 'WhatsApp enviado ao cliente',
+      responsible: 'Elisa Anjo',
+      contact: true,
+      taskId: '',
+      amountCents: 0,
+    }],
+  });
+  const entries = operationalActivityEntries(stateWithActivity);
+  assert.equal(entries.length, 1);
+  assert.equal(entries[0].source, 'operational');
+  assert.equal(entries[0].clientId, 'c');
+  assert.equal(entries[0].installmentId, 'p');
+  assert.equal(entries[0].action, 'whatsapp_sent');
+  const result = buildOperationalReport('2026-11-20', {
+    ...stateWithActivity,
+    today: '2026-11-20',
+  }, [], [], '', '');
+  assert.equal(result.dailyActions, 1);
+});
+
 test('calendário: sexta-feira, feriado segunda, recesso e sábado útil', () => {
   assert.equal(
     calendar.operationToday('America/Sao_Paulo', new Date('2026-11-21T01:00:00Z')),
