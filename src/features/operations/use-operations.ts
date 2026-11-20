@@ -201,6 +201,20 @@ export function useOperations(view: 'central' | 'clients' | 'calendar') {
           firstDueDate: String(data.get('firstDueDate') ?? ''),
         };
       }
+      if (dialog.type === 'generate_installments') {
+        const paidNumbers = [...data.keys()]
+          .map((key) => /^historicalPaid_(\d+)$/.exec(key)?.[1])
+          .filter((value): value is string => !!value);
+        command.historicalPayments = paidNumbers.map((numberString) => {
+          const number = Number(numberString);
+          return {
+            number,
+            paidDate: String(data.get(`historicalDate_${number}`) ?? ''),
+            paidCents: cents(data.get(`historicalAmount_${number}`)),
+            chargesCents: cents(data.get(`historicalCharges_${number}`)),
+          };
+        });
+      }
       if (dialog.type === 'save_installment') {
         command.id = dialog.installment?.id;
         command.amountCents = cents(data.get('amount'));

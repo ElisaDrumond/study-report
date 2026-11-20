@@ -120,6 +120,25 @@ Financial buttons use semantic colors and explicit verbs: amber for verification
 green for **recording** confirmed payment, blue for payment prediction, and
 neutral gray for editing. Their text labels remain accessible without color.
 
+## Importing already-paid installments at schedule creation
+
+When a contract predates the current date, the generation modal allows an
+operator to mark individual past-due installments as **historically paid** with
+an effective receipt date, exact amount received in USD, and explicit charges.
+Historical payment data is validated server-side against the schedule before
+any writing; all installments are inserted in the existing single transaction.
+The paid ones are verified, settled and annotated with `historicalPaid`; they
+never create outstanding collection tasks. Remaining installments stay unverified
+and do not enter the collection queue until individually reviewed.
+
+Amounts above the original installment require matching recorded charges.
+Amounts below the due balance (partials / discounts) cannot silently be marked
+as settled in this flow; those require a separate explicit correction/payment
+workflow. Historical receipts are retained in installment audit trails only,
+**not** as work done on the import date in operational activities/reports.
+Payment dates cannot be in the future. Generation still refuses clients with
+existing installments, to avoid duplicates.
+
 ## Existing contracts to protect
 
 - Preserve the SQLite schema and the migration/backup behavior.

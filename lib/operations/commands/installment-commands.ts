@@ -1,5 +1,6 @@
 import { formatCurrency, isUnpaid, outstandingCents } from '../../collection-status';
 import { buildInstallmentPlan } from '../../installment-plan';
+import { applyHistoricalPayment, validateHistoricalPayments } from '../../historical-installments';
 import { type Installment } from '../../collection-types';
 import { audit, put } from '../../database/operations-repository';
 import { date, money, pick, text } from '../../validation/operation-values';
@@ -16,8 +17,9 @@ export function handleInstallmentCommand(type: string, context: OperationContext
     if (command.confirmed !== true) throw Error('Confirmação manual obrigatória');
     const reference = text(command.reference, 'Referência do contrato', true);
     const plan = buildInstallmentPlan(client.paymentTerms);
+    const historical = validateHistoricalPayments(command.historicalPayments, plan, today);
     for (const draft of plan) {
-      const installment: Installment = {
+      const base: Installment = {
         id: crypto.randomUUID(),
         clientId: client.id,
         reference,
@@ -33,6 +35,7 @@ export function handleInstallmentCommand(type: string, context: OperationContext
         scheduledDate: '',
         createdAt: now,
       };
+      const installment = applyHistoricalPayment(base, historical.get(draft.number));
       put(database, 'op_installments', installment, true);
       audit(
         database,
@@ -40,7 +43,9 @@ export function handleInstallmentCommand(type: string, context: OperationContext
         installment.id,
         null,
         installment,
-        'Geração contratual confirmada manualmente',
+        installment.historicalPaid
+          ? 'Importação de pagamento histórico confirmado, sem atividade operacional retroativa'
+          : 'Geração contratual confirmada manualmente',
       );
     }
   } else if (type === 'save_installment') {

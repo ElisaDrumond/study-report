@@ -239,3 +239,68 @@
 @media (max-width: 520px) {
   .workflow { grid-template-columns: 1fr; }
 }
+
+/* Historical payments are classified inside the reviewed installment wizard. */
+.historicalPayments {
+  display: grid;
+  gap: 12px;
+  margin: 16px 0;
+  padding: 14px;
+  border: 1px solid #e4def4;
+  border-radius: 14px;
+  background: #faf9ff;
+}
+.historicalPayments h3 { color: #443778; margin: 0; font-size: 15px; }
+.historicalPayments p, .historicalPayments > small {
+  color: #777d96;
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 0;
+}
+.historicalRow {
+  padding: 12px;
+  border: 1px solid #e5e5ef;
+  border-radius: 12px;
+  background: #fff;
+}
+.historicalCheck {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #42425d;
+  cursor: pointer;
+}
+.historicalCheck input { width: 17px; height: 17px; accent-color: #16794b; }
+.historicalCheck strong { display: block; font-size: 12px; }
+.historicalCheck small { display: block; font-size: 11px; color: #858da2; margin-top: 3px; }
+.historicalState {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 700;
+  color: #8562a2;
+}
+.historicalFields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+  padding-top: 12px;
+}
+.historicalFields label {
+  display: grid;
+  gap: 6px;
+  color: #707892;
+  font-weight: 700;
+  font-size: 11px;
+}
+.historicalFields input {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #e2e5f0;
+  background: #fff;
+  border-radius: 9px;
+  padding: 10px 8px;
+  color: #363a56;
+}
+@media (max-width: 650px) {
+  .historicalFields { grid-template-columns: 1fr; }
+}

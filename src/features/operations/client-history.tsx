@@ -214,7 +214,7 @@ export default function ClientHistory({
                 </td>
                 <td>
                   {p.status === 'paid'
-                    ? 'Quitada'
+                    ? (p.historicalPaid ? 'Quitada (histórico)' : 'Quitada')
                     : p.status === 'partial'
                       ? 'Pagamento parcial'
                       : p.status === 'cancelled'

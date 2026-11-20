@@ -238,6 +238,83 @@ test('histórico do trabalho usa rótulos específicos para pagamentos e verific
   assert.notEqual(rows[0].operationalLabel, rows[1].operationalLabel);
 });
 
+test('cadastro de contrato antigo preserva recibos e encargos por parcela, sem cobranças nem atividades fictícias', () => {
+  const database = memory(state({
+    clients: [{
+      ...client,
+      paymentTerms: {
+        purchaseDescription: 'Curso profissionalizante',
+        installmentCount: 5,
+        installmentAmountCents: 45000,
+        frequency: 'monthly',
+        dueDay: 18,
+        firstDueDate: '2026-08-18',
+      },
+    }],
+    installments: [],
+  }));
+  const result = mutateOperation({
+    type: 'generate_installments',
+    clientId: 'c',
+    reference: 'Contrato de teste',
+    confirmed: true,
+    responsible: 'Elisa Anjo',
+    historicalPayments: [
+      { number: 1, paidDate: '2026-08-18', paidCents: 45000, chargesCents: 0 },
+      { number: 2, paidDate: '2026-09-25', paidCents: 49500, chargesCents: 4500 },
+      { number: 3, paidDate: '2026-10-18', paidCents: 45000, chargesCents: 0 },
+    ],
+  }, database, '2026-11-20');
+  assert.equal(result.installments.length, 5);
+  assert.deepEqual(result.installments.slice(0, 3).map((p) => p.status), ['paid', 'paid', 'paid']);
+  assert.equal(result.installments[1].paidCents, 49500);
+  assert.equal(result.installments[1].chargesCents, 4500);
+  assert.equal(result.installments[1].paidDate, '2026-09-25');
+  assert.equal(result.installments[1].historicalPaid, true);
+  assert.equal(result.installments[3].verificationStatus, 'unverified');
+  assert.equal(result.installments[4].verificationStatus, 'unverified');
+  assert.equal(result.pending.filter((task) => ['advance', 'due', 'initial', 'fine', 'block'].includes(task.kind)).length, 0);
+  assert.equal(result.activities.filter((activity) => activity.action === 'payment_confirmed').length, 0);
+  assert.equal(result.clients[0].financialStatus, 'verification_pending');
+  assert(result.audit.some((event) =>
+    event.reason === 'Importação de pagamento histórico confirmado, sem atividade operacional retroativa'));
+  database.close();
+});
+
+test('histórico rejeita valores inconsistentes e mantém importação atômica', () => {
+  const database = memory(state({
+    clients: [{
+      ...client,
+      paymentTerms: {
+        purchaseDescription: 'Curso',
+        installmentCount: 2,
+        installmentAmountCents: 45000,
+        frequency: 'monthly',
+        dueDay: 18,
+        firstDueDate: '2026-08-18',
+      },
+    }],
+    installments: [],
+  }));
+  const command = {
+    type: 'generate_installments', clientId: 'c', reference: 'Curso',
+    confirmed: true,
+    historicalPayments: [
+      { number: 1, paidDate: '2026-08-25', paidCents: 49500, chargesCents: 0 },
+    ],
+  };
+  assert.throws(() => mutateOperation(command, database, '2026-11-20'), /valor recebido/);
+  assert.equal(snapshot(database).installments.length, 0);
+  assert.throws(() => mutateOperation({
+    ...command,
+    historicalPayments: [
+      { number: 1, paidDate: '2026-12-01', paidCents: 45000, chargesCents: 0 },
+    ],
+  }, database, '2026-11-20'), /Data efetiva/);
+  assert.equal(snapshot(database).installments.length, 0);
+  database.close();
+});
+
 test('calendário: sexta-feira, feriado segunda, recesso e sábado útil', () => {
   assert.equal(
     calendar.operationToday('America/Sao_Paulo', new Date('2026-11-21T01:00:00Z')),

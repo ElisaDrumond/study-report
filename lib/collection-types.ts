@@ -23,6 +23,7 @@ export type Installment = {
   paidDate: string;
   paidCents: number;
   verificationStatus?: 'unverified' | 'verified';
+  historicalPaid?: boolean;
   collectionStartDate?: string;
   status: 'open' | 'partial' | 'paid' | 'cancelled';
   chargesCents: number;

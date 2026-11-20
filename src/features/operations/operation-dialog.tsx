@@ -7,6 +7,7 @@ import { buildInstallmentPlan } from '../../../lib/installment-plan';
 import { negotiationLabels, outstandingCents } from '../../../lib/collection-status';
 import Field from '../../components/ui/form-field';
 import { amountInput, channelLabels, money } from './operations-presenters';
+import HistoricalPaymentsFields from './historical-payments-fields';
 import type { OperationsController } from './use-operations';
 type Props = Pick<
   OperationsController,
@@ -188,6 +189,13 @@ export default function OperationDialog({
                       defaultValue={activeDialog.client?.crmRef || paymentTerms.purchaseDescription}
                     />
                   </Field>
+                  {(() => {
+                    try {
+                      return <div className={styles.wide}><HistoricalPaymentsFields plan={buildInstallmentPlan(paymentTerms)} today={today} /></div>;
+                    } catch {
+                      return null;
+                    }
+                  })()}
                 </>
               )}
               {activeDialog.type === 'save_installment' && (
