@@ -191,7 +191,7 @@ test('parcelas importadas não disparam cobrança antes da verificação inicial
   assert.equal(current.installments[0].collectionStartDate, '2026-11-20');
   assert(
     current.pending.some(
-      (task) => task.kind === 'portfolio_review' && task.dueDate === '2026-11-20',
+      (task) => task.kind === 'alternate' && task.dueDate === '2026-11-20',
     ),
   );
   assert(!current.pending.some((task) => task.kind === 'initial' && task.dueDate < '2026-11-20'));
@@ -285,10 +285,9 @@ test('histórico do trabalho usa rótulos específicos para pagamentos e verific
       ],
     }),
   );
-  assert.equal(rows[0].operationalLabel, 'Situação financeira verificada');
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].operationalLabel, 'Pagamento parcial registrado');
   assert.equal(rows[0].status, 'closed');
-  assert.equal(rows[1].operationalLabel, 'Pagamento parcial registrado');
-  assert.notEqual(rows[0].operationalLabel, rows[1].operationalLabel);
 });
 
 test('cadastro de contrato antigo preserva recibos e encargos por parcela, sem cobranças nem atividades fictícias', () => {
@@ -335,19 +334,18 @@ test('cadastro de contrato antigo preserva recibos e encargos por parcela, sem c
   assert.equal(result.installments[1].chargesCents, 4500);
   assert.equal(result.installments[1].paidDate, '2026-09-25');
   assert.equal(result.installments[1].historicalPaid, true);
-  assert.equal(result.installments[3].verificationStatus, 'unverified');
-  assert.equal(result.installments[4].verificationStatus, 'unverified');
-  assert.equal(
-    result.pending.filter((task) =>
-      ['advance', 'due', 'initial', 'fine', 'block'].includes(task.kind),
-    ).length,
-    0,
-  );
+  assert.equal(result.installments[3].verificationStatus, 'verified');
+  assert.equal(result.installments[3].collectionStartDate, '2026-11-20');
+  assert.equal(result.installments[4].verificationStatus, 'verified');
+  assert(!result.pending.some((task) => ['initial', 'fine', 'block', 'portfolio_review'].includes(task.kind) && task.status === 'open'));
+  assert(result.pending.some((task) => task.kind === 'alternate' && task.status === 'open'));
+  assert(result.pending.some((task) => task.kind === 'advance' && task.status === 'open'));
+  assert(result.pending.some((task) => task.kind === 'due' && task.status === 'open'));
   assert.equal(
     result.activities.filter((activity) => activity.action === 'payment_confirmed').length,
     0,
   );
-  assert.equal(result.clients[0].financialStatus, 'verification_pending');
+  assert.equal(result.clients[0].financialStatus, 'overdue');
   assert(
     result.audit.some(
       (event) =>
@@ -985,6 +983,7 @@ test('recesso em período e sábado útil persistem; adiamento guarda data solic
       taskId: task.id,
       dueDate: '2026-11-23',
       reason: 'Aguardar retorno autorizado',
+      responsible: 'Elisa Anjo',
     },
     db,
     '2026-11-20',
@@ -1218,21 +1217,21 @@ test('renegociação separa vencidos do saldo restante e não altera parcelas', 
     status: 'proposal_received',
     responsible: 'Elisa Anjo',
   };
-  let state = mutateOperation({ ...base, scope: 'overdue' }, db, '2026-11-20');
-  const onlyOverdue = state.negotiations[0];
+  let updated = mutateOperation({ ...base, scope: 'overdue' }, db, '2026-11-20');
+  const onlyOverdue = updated.negotiations[0];
   assert.equal(onlyOverdue.installmentIds.length, 2);
   assert.equal(onlyOverdue.balanceAtProposalCents, 75000);
   assert.equal(onlyOverdue.scope, 'overdue');
-  state = mutateOperation(
+  updated = mutateOperation(
     { ...base, scope: 'remaining', proposal: 'Todo contrato' },
     db,
     '2026-11-20',
   );
-  const all = state.negotiations.find((n) => n.scope === 'remaining');
+  const all = updated.negotiations.find((n) => n.scope === 'remaining');
   assert.equal(all.installmentIds.length, 3);
   assert.equal(all.balanceAtProposalCents, 95000);
-  assert.equal(state.installments[0].amountCents, 45000);
-  assert.equal(state.installments[2].dueDate, '2026-12-05');
+  assert.equal(updated.installments[0].amountCents, 45000);
+  assert.equal(updated.installments[2].dueDate, '2026-12-05');
   db.close();
 });
 

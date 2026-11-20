@@ -31,7 +31,7 @@ type Props = Pick<
   | 'today'
   | 'openTask'
   | 'setHistoryClient'
->;
+> & { onNavigate: (destination: 'clients' | 'activities') => void };
 export default function CentralPanel({
   stats,
   reload,
@@ -53,6 +53,7 @@ export default function CentralPanel({
   today,
   openTask,
   setHistoryClient,
+  onNavigate,
 }: Props) {
   return (
     <>
@@ -71,9 +72,17 @@ export default function CentralPanel({
             <p className={styles.eyebrow}>PRÓXIMAS AÇÕES</p>
             <h2>Fila operacional</h2>
           </div>
-          <button className={styles.secondary} onClick={reload} disabled={busy}>
-            <RefreshCw size={16} /> Recalcular
-          </button>
+          <div className={op.actions}>
+            <button className={styles.secondary} onClick={() => onNavigate('clients')}>
+              Clientes e parcelas
+            </button>
+            <button className={styles.secondary} onClick={() => onNavigate('activities')}>
+              Atividades realizadas
+            </button>
+            <button className={styles.secondary} onClick={reload} disabled={busy}>
+              <RefreshCw size={16} /> Recalcular
+            </button>
+          </div>
         </div>
         <div className={op.filters}>
           <Field label="Período">

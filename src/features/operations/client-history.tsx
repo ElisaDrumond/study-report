@@ -22,7 +22,10 @@ type Props = Pick<
   | 'today'
   | 'setSelectedClient'
   | 'setDialog'
-> & { clientId: string };
+> & {
+  clientId: string;
+  onNavigate: (destination: 'central' | 'activities') => void;
+};
 export default function ClientHistory({
   clientId,
   operationsState,
@@ -31,6 +34,7 @@ export default function ClientHistory({
   today,
   setSelectedClient,
   setDialog,
+  onNavigate,
 }: Props) {
   const id = clientId;
   const client = operationsState.clients.find((c) => c.id === id);
@@ -100,6 +104,12 @@ export default function ClientHistory({
       )}
       <p>{client.notes}</p>
       <div className={op.actions}>
+        <button className={styles.secondary} onClick={() => onNavigate('central')}>
+          Próximas ações na Central
+        </button>
+        <button className={styles.secondary} onClick={() => onNavigate('activities')}>
+          Atividades e relatórios
+        </button>
         <button
           className={styles.secondary}
           onClick={() => openClient('service', 'Registrar bloqueio / desbloqueio', client)}
