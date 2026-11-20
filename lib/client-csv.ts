@@ -1,5 +1,6 @@
 import type { Client, Installment } from './collection-types';
 import { outstandingCents } from './collection-status';
+import { parseBRLToCents } from './money-input';
 
 export type ImportedClientRow = {
   id: string;
@@ -8,6 +9,7 @@ export type ImportedClientRow = {
   notes: string;
   purchaseDescription?: string;
   installmentCount?: string;
+  installmentAmountCents?: string;
   frequency?: string;
   dueDay?: string;
   firstDueDate?: string;
@@ -24,6 +26,7 @@ const header = [
   'Observações',
   'O que comprou',
   'Quantidade de parcelas contratadas',
+  'Valor de cada parcela (R$)',
   'Periodicidade',
   'Dia do vencimento',
   'Primeiro vencimento',
@@ -53,6 +56,7 @@ export function exportClientsCsv(clients: Client[], installments: Installment[])
       client.notes,
       client.paymentTerms?.purchaseDescription ?? '',
       client.paymentTerms?.installmentCount ?? '',
+      client.paymentTerms?.installmentAmountCents ? (client.paymentTerms.installmentAmountCents / 100).toFixed(2).replace('.', ',') : '',
       client.paymentTerms?.frequency ?? '',
       client.paymentTerms?.dueDay ?? '',
       client.paymentTerms?.firstDueDate ?? '',
@@ -113,6 +117,7 @@ export function parseClientsCsv(source: string): ImportedClientRow[] {
   const notesColumn = find('observacoes', 'observacao', 'notas');
   const descriptionColumn = find('o que comprou', 'tipo de negocio', 'negocio contratado');
   const countColumn = find('quantidade de parcelas contratadas', 'quantidade de parcelas', 'parcelas contratadas');
+  const amountColumn = find('valor de cada parcela (r$)', 'valor da parcela', 'valor por parcela');
   const frequencyColumn = find('periodicidade', 'frequencia');
   const dueDayColumn = find('dia do vencimento', 'dia habitual do vencimento');
   const firstDueDateColumn = find('primeiro vencimento', 'data do primeiro vencimento');
@@ -133,6 +138,7 @@ export function parseClientsCsv(source: string): ImportedClientRow[] {
       notes: field(notesColumn),
       ...(field(descriptionColumn) ? { purchaseDescription: field(descriptionColumn) } : {}),
       ...(field(countColumn) ? { installmentCount: field(countColumn) } : {}),
+      ...(field(amountColumn) ? { installmentAmountCents: String(parseBRLToCents(field(amountColumn))) } : {}),
       ...(field(frequencyColumn) ? { frequency: field(frequencyColumn) } : {}),
       ...(field(dueDayColumn) ? { dueDay: field(dueDayColumn) } : {}),
       ...(field(firstDueDateColumn) ? { firstDueDate: field(firstDueDateColumn) } : {}),

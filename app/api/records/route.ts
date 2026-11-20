@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db, getEntries, saveEntry } from '../../../lib/db';
 import { read } from '../../../lib/database/operations-repository';
-import type { Client } from '../../../lib/collection-types';
+import type { Client, Installment } from '../../../lib/collection-types';
 import { cleanEntry, validateEntry } from '../../../lib/rules';
 export const runtime = 'nodejs';
 export async function GET() {
@@ -18,6 +18,17 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Cliente vinculado não encontrado' }, { status: 400 });
       }
       r.name = client.name;
+    }
+    if (r.installmentId) {
+      if (!r.clientId) {
+        return NextResponse.json({ error: 'Selecione o cliente da parcela' }, { status: 400 });
+      }
+      const installment = read<Installment>(db(), 'op_installments').find(
+        (candidate) => candidate.id === r.installmentId && candidate.clientId === r.clientId,
+      );
+      if (!installment) {
+        return NextResponse.json({ error: 'Parcela vinculada não encontrada' }, { status: 400 });
+      }
     }
     const errors = validateEntry(r);
     if (errors.length) return NextResponse.json({ error: errors.join('; ') }, { status: 400 });

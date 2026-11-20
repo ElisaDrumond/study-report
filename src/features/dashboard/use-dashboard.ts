@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { RefinementStyle } from '../../../lib/refinement';
-import type { Client } from '../../../lib/collection-types';
+import type { Client, Installment } from '../../../lib/collection-types';
 import { categories, cleanEntry, fmt, follow, validateEntry } from '../../../lib/rules';
 import type { Entry, SavedReport, Task } from '../../../lib/types';
 import type { Tab } from './dashboard-model';
@@ -19,6 +19,7 @@ import { route, today } from './dashboard-model';
 export function useDashboard() {
   const [tab, setTab] = useState<Tab>('central');
   const [clients, setClients] = useState<Client[]>([]);
+  const [installments, setInstallments] = useState<Installment[]>([]);
   const [date, setDate] = useState(today());
   const [records, setRecords] = useState<Entry[]>([]),
     [tasks, setTasks] = useState<Task[]>([]),
@@ -80,6 +81,7 @@ export function useDashboard() {
       setTasks(t);
       setHistory(h);
       setClients(operations.clients);
+      setInstallments(operations.installments);
     } catch (e) {
       notice((e as Error).message);
     } finally {
@@ -96,7 +98,10 @@ export function useDashboard() {
     let active = true;
     route('operations')
       .then((operations) => {
-        if (active) setClients(operations.clients);
+        if (active) {
+          setClients(operations.clients);
+          setInstallments(operations.installments);
+        }
       })
       .catch((error) => {
         if (active) setToast((error as Error).message);
@@ -324,6 +329,7 @@ export function useDashboard() {
   ];
   return {
     clients,
+    installments,
     navOpen,
     navigation,
     tab,

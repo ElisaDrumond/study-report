@@ -60,6 +60,14 @@ automatically creates receivables, confirms payments, changes dates or applies
 penalties. A future workflow should explicitly create and review installments and
 handle short months, exceptions, manual payment confirmations and approved charges.
 
+## Linking financial activities to installments
+
+A financial entry can optionally reference a recorded installment belonging to the
+selected client. The SQLite migration adds an optional installmentId column, and the
+API validates the relationship. Selecting a parcel records the context of an action;
+it does **not** mark a payment as received, change a balance, or apply penalties.
+Receipts remain explicit operational confirmations.
+
 ## Existing contracts to protect
 
 - Preserve the SQLite schema and the migration/backup behavior.

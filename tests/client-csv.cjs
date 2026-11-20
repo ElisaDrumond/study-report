@@ -46,6 +46,21 @@ test('CSV de contrato mantém quantidade, frequência e dia habitual de vencimen
   assert.equal(row.firstDueDate, '2026-12-05');
 });
 
+test('CSV de clientes inclui valor de cada parcela e o converte em centavos', () => {
+  const clients = [{
+    id: 'id-1', name: 'Exemplo', crmRef: 'CRM-1', notes: '',
+    financialStatus: 'current', serviceStatus: 'active',
+    createdAt: '2026-11-20T00:00:00Z',
+    paymentTerms: {
+      purchaseDescription: 'Curso', installmentCount: 2,
+      installmentAmountCents: 35000, frequency: 'monthly',
+      dueDay: 5, firstDueDate: '2026-12-05',
+    },
+  }];
+  const [row] = parseClientsCsv(exportClientsCsv(clients, []));
+  assert.equal(row.installmentAmountCents, '35000');
+});
+
 test('CSV simples permite importar nomes de uma lista externa', () => {
   assert.deepEqual(parseClientsCsv('Nome;Referência CRM\nAna;CRM-A\nBruna;CRM-B'), [
     { id: '', name: 'Ana', crmRef: 'CRM-A', notes: '' },

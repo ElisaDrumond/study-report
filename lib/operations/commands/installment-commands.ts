@@ -1,4 +1,5 @@
 import { formatCurrency, isUnpaid, outstandingCents } from '../../collection-status';
+import { buildInstallmentPlan } from '../../installment-plan';
 import { type Installment } from '../../collection-types';
 import { audit, put } from '../../database/operations-repository';
 import { date, money, pick, text } from '../../validation/operation-values';
@@ -6,7 +7,35 @@ import type { OperationContext } from '../operation-context';
 export function handleInstallmentCommand(type: string, context: OperationContext) {
   const { command, database, state, today, now, getClient, getInstallment, resolve, activity } =
     context;
-  if (type === 'save_installment') {
+  if (type === 'generate_installments') {
+    const client = getClient(command.clientId);
+    if (state.installments.some((installment) => installment.clientId === client.id)) {
+      throw Error('Este cliente já possui parcelas. Revise a carteira para evitar duplicação.');
+    }
+    if (!client.paymentTerms) throw Error('Cadastre primeiro as condições de pagamento');
+    if (command.confirmed !== true) throw Error('Confirmação manual obrigatória');
+    const reference = text(command.reference, 'Referência do contrato', true);
+    const plan = buildInstallmentPlan(client.paymentTerms);
+    for (const draft of plan) {
+      const installment: Installment = {
+        id: crypto.randomUUID(),
+        clientId: client.id,
+        reference,
+        number: draft.number,
+        amountCents: draft.amountCents,
+        dueDate: draft.dueDate,
+        paidDate: '',
+        paidCents: 0,
+        status: 'open',
+        chargesCents: 0,
+        chargeStatus: 'verify',
+        scheduledDate: '',
+        createdAt: now,
+      };
+      put(database, 'op_installments', installment, true);
+      audit(database, 'installment', installment.id, null, installment, 'Geração contratual confirmada manualmente');
+    }
+  } else if (type === 'save_installment') {
     const c = getClient(command.clientId),
       old = state.installments.find((p) => p.id === command.id);
     if (old && old.clientId !== c.id)

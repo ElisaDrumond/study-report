@@ -20,6 +20,7 @@ export default function Dashboard() {
   const controller = useDashboard();
   const {
     clients,
+    installments,
     navOpen,
     navigation,
     tab,
@@ -220,6 +221,7 @@ export default function Dashboard() {
           setEditing={setEditing}
           records={records}
           clients={clients}
+          installments={installments}
           editing={editing}
           saving={saving}
           saveRecord={saveRecord}

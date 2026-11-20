@@ -28,9 +28,20 @@ export function buildOperationalReport(
               name.trim().toLocaleLowerCase('pt-BR') === r.name.trim().toLocaleLowerCase('pt-BR'),
           ),
         );
-    return matches.length === 1
-      ? { ...r, clientId: matches[0].id, name: matches[0].name }
-      : { ...r, clientId: undefined };
+    if (matches.length !== 1) return { ...r, clientId: undefined };
+    const installment = r.installmentId
+      ? state.installments.find(
+          (candidate) => candidate.id === r.installmentId && candidate.clientId === matches[0].id,
+        )
+      : undefined;
+    return {
+      ...r,
+      clientId: matches[0].id,
+      name: matches[0].name,
+      notes: installment
+        ? `${installment.reference}, parcela ${installment.number}. ${r.notes}`.trim()
+        : r.notes,
+    };
   });
   const operations: Entry[] = state.activities
     .filter((a) => a.date === date && a.source !== 'legacy')

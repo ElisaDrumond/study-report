@@ -143,6 +143,7 @@ export default function Operations({ view }: { view: OperationsView }) {
           today={today}
           setSelectedClient={setSelectedClient}
           setDialog={setDialog}
+          run={run}
         />
       )}
 

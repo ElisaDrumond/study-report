@@ -36,6 +36,7 @@ export type Status =
 export type Entry = {
   id: string;
   clientId?: string;
+  installmentId?: string;
   name: string;
   category: Category;
   action: Action;

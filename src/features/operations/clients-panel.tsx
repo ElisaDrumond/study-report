@@ -200,6 +200,7 @@ export default function ClientsPanel({
           today={today}
           setSelectedClient={setSelectedClient}
           setDialog={setDialog}
+          run={run}
         />
       )}
     </>

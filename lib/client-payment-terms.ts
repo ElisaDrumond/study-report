@@ -5,6 +5,7 @@ export type PaymentFrequency = 'monthly' | 'biweekly' | 'weekly' | 'one_time';
 export type ClientPaymentTerms = {
   purchaseDescription: string;
   installmentCount: number | null;
+  installmentAmountCents: number | null;
   frequency: PaymentFrequency;
   dueDay: number | null;
   firstDueDate: string;
@@ -25,6 +26,7 @@ export function parsePaymentTerms(raw: unknown): ClientPaymentTerms | undefined 
   const input = raw as Record<string, unknown>;
   const description = input.purchaseDescription ?? '';
   const count = input.installmentCount ?? '';
+  const amount = input.installmentAmountCents ?? '';
   const frequency = input.frequency ?? 'monthly';
   const day = input.dueDay ?? '';
   const first = input.firstDueDate ?? '';
@@ -50,6 +52,7 @@ export function parsePaymentTerms(raw: unknown): ClientPaymentTerms | undefined 
 
   const installmentCount = parseOptionalInt(count, 'Quantidade de parcelas', 240);
   const dueDay = parseOptionalInt(day, 'Dia de vencimento', 31);
+  const installmentAmountCents = parseOptionalInt(amount, 'Valor de cada parcela', 100000000000);
   if (dueDay !== null && frequency !== 'monthly') {
     throw Error('Dia fixo de vencimento só se aplica a pagamentos mensais');
   }
@@ -57,13 +60,14 @@ export function parsePaymentTerms(raw: unknown): ClientPaymentTerms | undefined 
     throw Error('Pagamento único deve ter apenas uma parcela');
   }
 
-  if (!description.trim() && installmentCount === null && dueDay === null && !first) {
+  if (!description.trim() && installmentCount === null && installmentAmountCents === null && dueDay === null && !first) {
     return undefined;
   }
 
   return {
     purchaseDescription: description.trim(),
     installmentCount,
+    installmentAmountCents,
     frequency: frequency as PaymentFrequency,
     dueDay,
     firstDueDate: first,
@@ -76,6 +80,7 @@ export function mergePaymentTerms(
   fields: {
     purchaseDescription?: string;
     installmentCount?: string;
+    installmentAmountCents?: string;
     frequency?: string;
     dueDay?: string;
     firstDueDate?: string;

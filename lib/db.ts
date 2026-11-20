@@ -68,6 +68,9 @@ export function migrateEntryClientIds(database: Database.Database) {
     database.exec('ALTER TABLE entries ADD COLUMN clientId TEXT');
   }
   database.exec('CREATE INDEX IF NOT EXISTS idx_entries_client ON entries(clientId)');
+  if (!columns.has('installmentId')) {
+    database.exec('ALTER TABLE entries ADD COLUMN installmentId TEXT');
+  }
 }
 
 export const getEntries = () =>
@@ -80,9 +83,9 @@ export function saveEntry(r: Entry) {
   const now = new Date().toISOString();
   db()
     .prepare(
-      `INSERT INTO entries(id,name,category,action,status,date,days,lastContact,scheduled,notes,clientId,createdAt,updatedAt) VALUES(@id,@name,@category,@action,@status,@date,@days,@lastContact,@scheduled,@notes,@clientId,@now,@now) ON CONFLICT(id) DO UPDATE SET name=excluded.name,category=excluded.category,action=excluded.action,status=excluded.status,date=excluded.date,days=excluded.days,lastContact=excluded.lastContact,scheduled=excluded.scheduled,notes=excluded.notes,clientId=excluded.clientId,updatedAt=excluded.updatedAt`,
+      `INSERT INTO entries(id,name,category,action,status,date,days,lastContact,scheduled,notes,clientId,installmentId,createdAt,updatedAt) VALUES(@id,@name,@category,@action,@status,@date,@days,@lastContact,@scheduled,@notes,@clientId,@installmentId,@now,@now) ON CONFLICT(id) DO UPDATE SET name=excluded.name,category=excluded.category,action=excluded.action,status=excluded.status,date=excluded.date,days=excluded.days,lastContact=excluded.lastContact,scheduled=excluded.scheduled,notes=excluded.notes,clientId=excluded.clientId,installmentId=excluded.installmentId,updatedAt=excluded.updatedAt`,
     )
-    .run({ ...r, clientId: r.clientId || null, now });
+    .run({ ...r, clientId: r.clientId || null, installmentId: r.installmentId || null, now });
 }
 export function saveTask(t: Task) {
   db()

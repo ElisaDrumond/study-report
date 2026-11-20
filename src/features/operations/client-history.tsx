@@ -5,6 +5,7 @@ import styles from '../../../app/page.module.css';
 import { calendarDaysBetween } from '../../../lib/business-calendar';
 import { isOverdue, negotiationLabels, outstandingCents } from '../../../lib/collection-status';
 import { fmt } from '../../../lib/rules';
+import { buildInstallmentPlan } from '../../../lib/installment-plan';
 import {
   activityLabel,
   channelLabels,
@@ -21,6 +22,7 @@ type Props = Pick<
   | 'today'
   | 'setSelectedClient'
   | 'setDialog'
+  | 'run'
 > & { clientId: string };
 export default function ClientHistory({
   clientId,
@@ -30,10 +32,12 @@ export default function ClientHistory({
   today,
   setSelectedClient,
   setDialog,
+  run,
 }: Props) {
   const id = clientId;
   const client = operationsState.clients.find((c) => c.id === id);
   if (!client) return null;
+  const paymentTerms = client.paymentTerms;
   const installments = operationsState.installments.filter((p) => p.clientId === id),
     activities = operationsState.activities.filter((a) => a.clientId === id),
     negotiations = operationsState.negotiations.filter((n) => n.clientId === id);
@@ -76,6 +80,7 @@ export default function ClientHistory({
                 weekly: 'Semanal',
                 one_time: 'Pagamento único',
               } as const)[client.paymentTerms.frequency]}
+              {client.paymentTerms.installmentAmountCents ? ` · ${money(client.paymentTerms.installmentAmountCents)} por parcela` : ''}
               {client.paymentTerms.dueDay
                 ? ` · Vencimento habitual: dia ${client.paymentTerms.dueDay}`
                 : ''}
@@ -114,6 +119,58 @@ export default function ClientHistory({
           Nova renegociação
         </button>
       </div>
+      {!installments.length && paymentTerms && (
+        <section className={styles.note}>
+          {(() => {
+            let planned;
+            try {
+              planned = buildInstallmentPlan(paymentTerms);
+            } catch (error) {
+              return (
+                <div>
+                  Para gerar as parcelas, complete quantidade, valor por parcela e primeiro
+                  vencimento no cadastro do cliente. {error instanceof Error ? error.message : ''}
+                </div>
+              );
+            }
+            const total = planned.reduce((sum, installment) => sum + installment.amountCents, 0);
+            return (
+              <div>
+                <strong>Prévia: {planned.length} parcelas · Total {money(total)}</strong>
+                <p>
+                  Primeira: {fmt(planned[0].dueDate)} · Última: {fmt(planned[planned.length - 1].dueDate)}
+                </p>
+                <p>
+                  {planned.slice(0, 3).map((item) =>
+                    `#${item.number}: ${fmt(item.dueDate)} (${money(item.amountCents)})`,
+                  ).join(' | ')}
+                </p>
+                <button
+                  className={styles.primary}
+                  onClick={() => {
+                    const reference = client.crmRef || client.paymentTerms?.purchaseDescription;
+                    if (!reference) {
+                      window.alert('Informe a referência CRM ou a descrição da compra.');
+                      return;
+                    }
+                    if (!window.confirm(
+                      `Gerar ${planned.length} parcelas para ${client.name}, total de ${money(total)}? Elas entrarão na régua de cobrança, sem enviar mensagens automaticamente.`,
+                    )) return;
+                    run({
+                      type: 'generate_installments',
+                      clientId: client.id,
+                      reference,
+                      confirmed: true,
+                    });
+                  }}
+                >
+                  Confirmar geração das parcelas
+                </button>
+              </div>
+            );
+          })()}
+        </section>
+      )}
       <h3>Parcelas e valores registrados</h3>
       <div className={styles.tableWrap}>
         <table>

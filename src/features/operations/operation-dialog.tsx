@@ -108,6 +108,16 @@ export default function OperationDialog({
                       defaultValue={activeDialog.client?.paymentTerms?.installmentCount ?? ''}
                     />
                   </Field>
+                  <Field label="Valor de cada parcela (R$)">
+                    <input
+                      name="installmentAmount"
+                      inputMode="decimal"
+                      placeholder="Ex.: 350,00"
+                      defaultValue={activeDialog.client?.paymentTerms?.installmentAmountCents
+                        ? amountInput(activeDialog.client.paymentTerms.installmentAmountCents)
+                        : ''}
+                    />
+                  </Field>
                   <Field label="Periodicidade do pagamento">
                     <select
                       name="frequency"
@@ -138,8 +148,8 @@ export default function OperationDialog({
                     />
                   </Field>
                   <div className={`${styles.note} ${styles.wide}`}>
-                    Estas são condições contratuais informativas. O sistema não cria parcelas,
-                    confirma pagamentos, altera vencimentos ou aplica multas a partir deste cadastro.
+                    Após salvar, revise a prévia e confirme a geração das parcelas no histórico.
+                    Pagamentos, reagendamentos e multas exigem registro manual.
                   </div>
                   <Field label="Observações" wide>
                     <textarea name="notes" defaultValue={activeDialog.client?.notes} />

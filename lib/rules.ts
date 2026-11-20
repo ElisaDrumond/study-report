@@ -173,6 +173,7 @@ export function cleanEntry(raw: Partial<Entry>): Entry {
   return {
     id: String(raw.id || crypto.randomUUID()),
     clientId: typeof raw.clientId === 'string' ? raw.clientId.trim() : '',
+    installmentId: typeof raw.installmentId === 'string' ? raw.installmentId.trim() : '',
     name: String(raw.name || '').trim(),
     category: effectiveCategory,
     action,

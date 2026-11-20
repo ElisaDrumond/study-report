@@ -6,6 +6,7 @@ test('condições mensais são guardadas como metadados contratuais', () => {
   const terms = parsePaymentTerms({
     purchaseDescription: 'Curso de soldagem',
     installmentCount: '12',
+    installmentAmountCents: '35000',
     frequency: 'monthly',
     dueDay: '5',
     firstDueDate: '2026-12-05',
@@ -13,6 +14,7 @@ test('condições mensais são guardadas como metadados contratuais', () => {
   assert.deepEqual(terms, {
     purchaseDescription: 'Curso de soldagem',
     installmentCount: 12,
+    installmentAmountCents: 35000,
     frequency: 'monthly',
     dueDay: 5,
     firstDueDate: '2026-12-05',
@@ -31,6 +33,7 @@ test('CSV atualiza parcialmente sem apagar detalhes de contratos anteriores', ()
   const existing = parsePaymentTerms({
     purchaseDescription: 'Curso',
     installmentCount: 8,
+    installmentAmountCents: null,
     frequency: 'monthly',
     dueDay: 5,
     firstDueDate: '',

@@ -127,6 +127,7 @@ test('migração de vínculo com clientes não apaga atividades legadas e é ide
   migrateEntryClientIds(database);
   const columns = database.prepare('PRAGMA table_info(entries)').all().map((column) => column.name);
   assert(columns.includes('clientId'));
+  assert(columns.includes('installmentId'));
   assert.equal(database.prepare('SELECT name FROM entries').get().name, 'Legado');
   database.close();
 });
