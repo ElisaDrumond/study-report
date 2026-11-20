@@ -1,11 +1,119 @@
-import type {CalendarException} from './business-calendar';
-export type ServiceStatus='active'|'block_pending'|'blocked'|'unblock_pending';
-export type Client={id:string;name:string;crmRef:string;financialStatus:'current'|'overdue'|'external';serviceStatus:ServiceStatus;notes:string;createdAt:string;legacyNames?:string[];serviceOverride?:boolean};
-export type Installment={id:string;clientId:string;reference:string;number:number;amountCents:number;dueDate:string;paidDate:string;paidCents:number;status:'open'|'partial'|'paid'|'cancelled';chargesCents:number;chargeStatus:'verify'|'applied'|'not_applicable';scheduledDate:string;createdAt:string};
-export type Negotiation={id:string;clientId:string;installmentIds:string[];requestedDate:string;proposal:string;status:'proposal_received'|'awaiting_approval'|'approved'|'not_approved'|'agreement_active'|'cancelled';approvedDate:string;authorizedTerms:string;suspensionUntil:string;createdAt:string};
-export type OperationActivity={id:string;clientId:string;installmentId:string;category:string;action:string;status:string;occurredAt:string;date:string;channel:'email'|'whatsapp'|'both'|'phone'|'system'|'other';notes:string;result:string;responsible:string;contact:boolean;taskId:string;amountCents:number;source?:'legacy'};
-export type PendingTask={id:string;clientId:string;installmentId:string;kind:string;rule:string;cycle:string;dueDate:string;priority:'high'|'normal'|'low';status:'open'|'deferred'|'done'|'cancelled';reason:string;recommendation:string;completedAt:string;deferReason:string;deferRequestedDate?:string;resolvedActivityId:string;createdAt:string};
-export type AuditEvent={id:string;entity:string;entityId:string;at:string;reason:string;before:unknown;after:unknown};
-export type CollectionSettings={timezone:string;advanceDays:number;followupBusinessDays:number;alternateBusinessDays:number;externalReviewDays:number;finePercent:number;duePolicy:'previous_business_day'};
-export const defaultSettings:CollectionSettings={timezone:'America/Sao_Paulo',advanceDays:15,followupBusinessDays:2,alternateBusinessDays:2,externalReviewDays:60,finePercent:10,duePolicy:'previous_business_day'};
-export type OperationSnapshot={clients:Client[];installments:Installment[];activities:OperationActivity[];pending:PendingTask[];negotiations:Negotiation[];exceptions:CalendarException[];audit:AuditEvent[];settings:CollectionSettings};
+import type { CalendarException } from './business-calendar';
+export type ServiceStatus = 'active' | 'block_pending' | 'blocked' | 'unblock_pending';
+export type Client = {
+  id: string;
+  name: string;
+  crmRef: string;
+  financialStatus: 'current' | 'overdue' | 'external';
+  serviceStatus: ServiceStatus;
+  notes: string;
+  createdAt: string;
+  legacyNames?: string[];
+  serviceOverride?: boolean;
+};
+export type Installment = {
+  id: string;
+  clientId: string;
+  reference: string;
+  number: number;
+  amountCents: number;
+  dueDate: string;
+  paidDate: string;
+  paidCents: number;
+  status: 'open' | 'partial' | 'paid' | 'cancelled';
+  chargesCents: number;
+  chargeStatus: 'verify' | 'applied' | 'not_applicable';
+  scheduledDate: string;
+  createdAt: string;
+};
+export type Negotiation = {
+  id: string;
+  clientId: string;
+  installmentIds: string[];
+  requestedDate: string;
+  proposal: string;
+  status:
+    | 'proposal_received'
+    | 'awaiting_approval'
+    | 'approved'
+    | 'not_approved'
+    | 'agreement_active'
+    | 'cancelled';
+  approvedDate: string;
+  authorizedTerms: string;
+  suspensionUntil: string;
+  createdAt: string;
+};
+export type OperationActivity = {
+  id: string;
+  clientId: string;
+  installmentId: string;
+  category: string;
+  action: string;
+  status: string;
+  occurredAt: string;
+  date: string;
+  channel: 'email' | 'whatsapp' | 'both' | 'phone' | 'system' | 'other';
+  notes: string;
+  result: string;
+  responsible: string;
+  contact: boolean;
+  taskId: string;
+  amountCents: number;
+  source?: 'legacy';
+};
+export type PendingTask = {
+  id: string;
+  clientId: string;
+  installmentId: string;
+  kind: string;
+  rule: string;
+  cycle: string;
+  dueDate: string;
+  priority: 'high' | 'normal' | 'low';
+  status: 'open' | 'deferred' | 'done' | 'cancelled';
+  reason: string;
+  recommendation: string;
+  completedAt: string;
+  deferReason: string;
+  deferRequestedDate?: string;
+  resolvedActivityId: string;
+  createdAt: string;
+};
+export type AuditEvent = {
+  id: string;
+  entity: string;
+  entityId: string;
+  at: string;
+  reason: string;
+  before: unknown;
+  after: unknown;
+};
+export type CollectionSettings = {
+  timezone: string;
+  advanceDays: number;
+  followupBusinessDays: number;
+  alternateBusinessDays: number;
+  externalReviewDays: number;
+  finePercent: number;
+  duePolicy: 'previous_business_day';
+};
+export const defaultSettings: CollectionSettings = {
+  timezone: 'America/Sao_Paulo',
+  advanceDays: 15,
+  followupBusinessDays: 2,
+  alternateBusinessDays: 2,
+  externalReviewDays: 60,
+  finePercent: 10,
+  duePolicy: 'previous_business_day',
+};
+export type OperationSnapshot = {
+  clients: Client[];
+  installments: Installment[];
+  activities: OperationActivity[];
+  pending: PendingTask[];
+  negotiations: Negotiation[];
+  exceptions: CalendarException[];
+  audit: AuditEvent[];
+  settings: CollectionSettings;
+};

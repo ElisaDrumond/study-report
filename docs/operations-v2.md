@@ -28,17 +28,17 @@ Avisos antecipados usam o último útil igual ou anterior. Alterações recalcul
 
 ## Régua
 
-| Etapa | Prazo e recomendação |
-| --- | --- |
-| D-15 | E-mail e WhatsApp; antecipar ao útil anterior. Conclusão exige confirmação dos dois canais. |
-| Vencimento | Lembrete por WhatsApp no vencimento ou útil anterior. Não representa inadimplência antecipada. |
-| Primeiro útil após vencer | Cobrança inicial, início da janela e bloqueio pendente. Bloqueio efetivo exige registro separado. |
-| Janela | Dois úteis após o início, seguidos de nova cobrança no útil posterior ao término. Quarta → término sexta → próxima cobrança segunda, salvo exceções. |
-| Atraso | Dias corridos desde o vencimento. Multa de 10% é apenas verificação contratual, sem cálculo ou aplicação automática. Verificação não concluída permanece aberta após 15 dias. |
-| Duas parcelas vencidas | Avaliar renegociação e solicitar decisão da gestão; calcular atraso real da mais antiga. |
-| Cobrança continuada | Após a janela, ações em úteis alternados, usando o último contato efetivo. Segunda → quarta → sexta no intervalo padrão de dois úteis. |
-| Proposta em análise | Suspende cobranças incompatíveis nas parcelas envolvidas até decisão ou fim da suspensão autorizada. Acordo formalizado mantém essas cobranças suspensas. |
-| Caso antigo | A partir de 60 dias, sugerir análise externa; encaminhamento exige confirmação, justificativa e responsável. |
+| Etapa                     | Prazo e recomendação                                                                                                                                                          |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D-15                      | E-mail e WhatsApp; antecipar ao útil anterior. Conclusão exige confirmação dos dois canais.                                                                                   |
+| Vencimento                | Lembrete por WhatsApp no vencimento ou útil anterior. Não representa inadimplência antecipada.                                                                                |
+| Primeiro útil após vencer | Cobrança inicial, início da janela e bloqueio pendente. Bloqueio efetivo exige registro separado.                                                                             |
+| Janela                    | Dois úteis após o início, seguidos de nova cobrança no útil posterior ao término. Quarta → término sexta → próxima cobrança segunda, salvo exceções.                          |
+| Atraso                    | Dias corridos desde o vencimento. Multa de 10% é apenas verificação contratual, sem cálculo ou aplicação automática. Verificação não concluída permanece aberta após 15 dias. |
+| Duas parcelas vencidas    | Avaliar renegociação e solicitar decisão da gestão; calcular atraso real da mais antiga.                                                                                      |
+| Cobrança continuada       | Após a janela, ações em úteis alternados, usando o último contato efetivo. Segunda → quarta → sexta no intervalo padrão de dois úteis.                                        |
+| Proposta em análise       | Suspende cobranças incompatíveis nas parcelas envolvidas até decisão ou fim da suspensão autorizada. Acordo formalizado mantém essas cobranças suspensas.                     |
+| Caso antigo               | A partir de 60 dias, sugerir análise externa; encaminhamento exige confirmação, justificativa e responsável.                                                                  |
 
 Antecedência, janela, intervalo, prazo para análise externa, percentual a verificar e fuso são configuráveis. A política de aviso de vencimento é antecipar ao útil anterior. Nenhum canal é acionado pelo sistema.
 

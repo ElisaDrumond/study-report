@@ -1,0 +1,15 @@
+node_modules/
+.next/
+.next-production/
+.test-build/
+.git/
+data/
+.env*
+next-env.d.ts
+package-lock.json
+*.tsbuildinfo
+*.db
+*.db-*
+*.sqlite*
+# Reference artifact from the original dashboard, not maintained application code.
+public/dashboard-legado.html
