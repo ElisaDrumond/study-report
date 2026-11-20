@@ -17,7 +17,7 @@ const entry = (overrides = {}) => ({
   days: null,
   lastContact: '',
   scheduled: '',
-  notes: 'Valor R$ 1.234,56',
+  notes: 'Valor US$ 1.234,56',
   ...overrides,
 });
 const rows = [
@@ -35,6 +35,12 @@ const rows = [
   }),
   entry({ id: '4', category: 'renegotiation', status: 'awaiting_approval' }),
 ];
+test('normalização preserva vínculo de cliente da carteira', () => {
+  const { cleanEntry } = require('../.test-build/rules');
+  assert.equal(cleanEntry(entry({ clientId: 'client-123' })).clientId, 'client-123');
+  assert.equal(cleanEntry(entry()).clientId, '');
+});
+
 const original = buildReport(date, rows, []);
 const plan = () => ({ introduction: 0, sections: reportSections(original.body).map((s) => s.id) });
 const client = (output, status = 'completed') => ({

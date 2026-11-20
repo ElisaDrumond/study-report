@@ -1,10 +1,12 @@
 import type { CalendarException } from './business-calendar';
+import type { ClientPaymentTerms } from './client-payment-terms';
 export type ServiceStatus = 'active' | 'block_pending' | 'blocked' | 'unblock_pending';
 export type Client = {
   id: string;
   name: string;
   crmRef: string;
-  financialStatus: 'current' | 'overdue' | 'external';
+  paymentTerms?: ClientPaymentTerms;
+  financialStatus: 'current' | 'overdue' | 'external' | 'verification_pending';
   serviceStatus: ServiceStatus;
   notes: string;
   createdAt: string;
@@ -20,6 +22,9 @@ export type Installment = {
   dueDate: string;
   paidDate: string;
   paidCents: number;
+  verificationStatus?: 'unverified' | 'verified';
+  historicalPaid?: boolean;
+  collectionStartDate?: string;
   status: 'open' | 'partial' | 'paid' | 'cancelled';
   chargesCents: number;
   chargeStatus: 'verify' | 'applied' | 'not_applicable';
@@ -30,6 +35,8 @@ export type Negotiation = {
   id: string;
   clientId: string;
   installmentIds: string[];
+  scope?: 'overdue' | 'remaining' | 'custom';
+  balanceAtProposalCents?: number;
   requestedDate: string;
   proposal: string;
   status:
@@ -61,6 +68,8 @@ export type OperationActivity = {
   taskId: string;
   amountCents: number;
   source?: 'legacy';
+  /** Work contributes to daily reports; administrative is preserved only in history/audit. */
+  reportScope?: 'work' | 'administrative';
 };
 export type PendingTask = {
   id: string;

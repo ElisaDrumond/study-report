@@ -5,9 +5,11 @@ import {
   previousOrSameBusinessDay,
   shiftDate,
 } from './business-calendar';
-import { daysOverdue, isOverdue, isUnpaid } from './collection-status';
+import { daysOverdue, formatCurrency, isOverdue, isUnpaid, outstandingCents } from './collection-status';
 import type { OperationSnapshot, PendingTask } from './collection-types';
 import { isDate } from './rules';
+import { isReportableOperationalActivity } from './operational-activity-scope';
+
 export const taskLabels: Record<string, string> = {
   advance: 'Enviar e-mail e WhatsApp com link de pagamento',
   due: 'Lembrar vencimento por WhatsApp',
@@ -23,7 +25,6 @@ export const taskLabels: Record<string, string> = {
   receipt: 'Anexar comprovante no sistema corporativo',
   crm: 'Atualizar CRM',
   management: 'Encaminhar caso para análise da gestão',
-  external_review: 'Avaliar cobrança externa',
 };
 export function generateCollectionTasks(s: OperationSnapshot, today: string): PendingTask[] {
   if (!isDate(today)) throw Error('Data operacional inválida');
@@ -38,7 +39,9 @@ export function generateCollectionTasks(s: OperationSnapshot, today: string): Pe
     dueDate: string,
     reason: string,
     priority: PendingTask['priority'] = 'normal',
-  ) =>
+  ) => {
+    const installment = s.installments.find((item) => item.id === installmentId);
+    if (installment?.collectionStartDate && dueDate < installment.collectionStartDate) return;
     result.push({
       id: JSON.stringify([kind, clientId, installmentId, cycle]),
       clientId,
@@ -56,6 +59,7 @@ export function generateCollectionTasks(s: OperationSnapshot, today: string): Pe
       resolvedActivityId: '',
       createdAt: today,
     });
+  };
   for (const client of s.clients) {
     const external = client.financialStatus === 'external';
     const installments = s.installments.filter(
@@ -98,7 +102,7 @@ export function generateCollectionTasks(s: OperationSnapshot, today: string): Pe
       .sort((a, b) => b.occurredAt.localeCompare(a.occurredAt))[0];
     if (!external) {
       for (const p of installments) {
-        if (!isUnpaid(p)) continue;
+        if (!isUnpaid(p) || p.verificationStatus === 'unverified') continue;
         const cycle = p.id;
         const first = nextBusinessDay(p.dueDate, e);
         const scheduled = p.scheduledDate && isDate(p.scheduledDate);
@@ -218,26 +222,58 @@ export function generateCollectionTasks(s: OperationSnapshot, today: string): Pe
               ),
               e,
             ),
-            `${overdue.length} parcelas vencidas; atraso real da mais antiga: ${daysOverdue(oldest, today)} dias. Novas condições exigem aprovação.`,
+            `${overdue.length} parcelas vencidas; saldo vencido consolidado ${formatCurrency(overdue.reduce((total, item) => total + outstandingCents(item), 0))}; atraso mais antigo: ${daysOverdue(oldest, today)} dias. A proposta pode incluir só vencidas ou todo o saldo contratual restante. Novas condições exigem aprovação.`,
             'high',
           );
       }
       const collectible = overdue.filter((p) => !isSuspended(p.id) && !scheduledUnchecked(p.id));
       if (collectible.length) {
         const oldest = collectible.reduce((a, b) => (a.dueDate < b.dueDate ? a : b));
+        const overdueBalance = overdue.reduce((sum, item) => sum + outstandingCents(item), 0);
+        const debtContext = overdue.length >= 2
+          ? `${overdue.length} parcelas vencidas; saldo vencido consolidado ${formatCurrency(overdueBalance)}. `
+          : '';
         const afterWindow = nextBusinessDay(
           addBusinessDays(nextBusinessDay(oldest.dueDate, e), cfg.followupBusinessDays, e),
           e,
         );
-        if (today >= afterWindow) {
-          const base = lastContact?.date || afterWindow;
+        // An imported, already-overdue installment starts follow-up on the day
+        // the operator confirms its initial status, not on the historical due date.
+        // Before the first actual contact, the first actionable collection can be today.
+        const collectionStart = oldest.collectionStartDate;
+        const freshPortfolio =
+          !!collectionStart && oldest.dueDate < collectionStart;
+        const recentContact = lastContact &&
+          (!collectionStart || lastContact.date >= collectionStart)
+          ? lastContact
+          : undefined;
+        if (freshPortfolio && today >= collectionStart) {
+          const due = recentContact
+            ? addBusinessDays(recentContact.date, cfg.alternateBusinessDays, e)
+            : getNextCollectionDate(collectionStart, e);
+          add(
+            client.id,
+            oldest.id,
+            'alternate',
+            recentContact?.id || oldest.id,
+            due,
+            recentContact
+              ? debtContext + 'Continuar a cobrança a cada ' + cfg.alternateBusinessDays +
+                ' dias úteis após o último contato efetivamente registrado.'
+              : debtContext + 'Contrato antigo conferido: iniciar acompanhamento da dívida em aberto.',
+            'high',
+          );
+        } else if (today >= afterWindow) {
+          const base = lastContact && lastContact.date > afterWindow
+            ? lastContact.date
+            : afterWindow;
           add(
             client.id,
             oldest.id,
             'alternate',
             lastContact?.id || oldest.id,
             addBusinessDays(base, cfg.alternateBusinessDays, e),
-            'Dias úteis alternados, com base no último contato efetivamente registrado.',
+            debtContext + 'Dias úteis alternados, com base no último contato efetivamente registrado.',
           );
         }
       }
@@ -252,22 +288,13 @@ export function generateCollectionTasks(s: OperationSnapshot, today: string): Pe
           getNextCollectionDate(n.requestedDate, e),
           'Proposta depende de decisão registrada da gestão.',
         );
-      if (overdue.length) {
-        const oldest = overdue.reduce((a, b) => (a.dueDate < b.dueDate ? a : b));
-        if (daysOverdue(oldest, today) >= cfg.externalReviewDays)
-          add(
-            client.id,
-            oldest.id,
-            'external_review',
-            oldest.id,
-            getNextCollectionDate(shiftDate(oldest.dueDate, cfg.externalReviewDays), e),
-            `${overdue.length} parcelas vencidas; ${daysOverdue(oldest, today)} dias de atraso. Apenas recomendar análise, sem encaminhamento.`,
-            'high',
-          );
-      }
+
     }
     const payments = s.activities.filter(
-      (a) => a.clientId === client.id && a.action === 'payment_confirmed',
+      (a) =>
+        a.clientId === client.id &&
+        a.action === 'payment_confirmed' &&
+        isReportableOperationalActivity(a),
     );
     for (const payment of payments) {
       const installment = installments.find((p) => p.id === payment.installmentId);

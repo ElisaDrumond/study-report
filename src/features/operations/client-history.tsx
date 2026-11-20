@@ -1,10 +1,11 @@
 'use client';
-import { X } from 'lucide-react';
+import { CalendarClock, CircleCheck, ClipboardCheck, Pencil, X } from 'lucide-react';
 import op from '../../../app/operations.module.css';
 import styles from '../../../app/page.module.css';
 import { calendarDaysBetween } from '../../../lib/business-calendar';
 import { isOverdue, negotiationLabels, outstandingCents } from '../../../lib/collection-status';
 import { fmt } from '../../../lib/rules';
+import { buildInstallmentPlan } from '../../../lib/installment-plan';
 import {
   activityLabel,
   channelLabels,
@@ -34,6 +35,7 @@ export default function ClientHistory({
   const id = clientId;
   const client = operationsState.clients.find((c) => c.id === id);
   if (!client) return null;
+  const paymentTerms = client.paymentTerms;
   const installments = operationsState.installments.filter((p) => p.clientId === id),
     activities = operationsState.activities.filter((a) => a.clientId === id),
     negotiations = operationsState.negotiations.filter((n) => n.clientId === id);
@@ -62,6 +64,40 @@ export default function ClientHistory({
           <X />
         </button>
       </div>
+      {client.paymentTerms && (
+        <div className={styles.note}>
+          <div>
+            <strong>Negócio contratado</strong>
+            <p>{client.paymentTerms.purchaseDescription || 'Não informado'}</p>
+            <p>
+              {client.paymentTerms.installmentCount ?? 'Quantidade não informada'} parcela(s)
+              {' · '}
+              {
+                (
+                  {
+                    monthly: 'Mensal',
+                    biweekly: 'A cada 15 dias',
+                    weekly: 'Semanal',
+                    one_time: 'Pagamento único',
+                  } as const
+                )[client.paymentTerms.frequency]
+              }
+              {client.paymentTerms.installmentAmountCents
+                ? ` · ${money(client.paymentTerms.installmentAmountCents)} por parcela`
+                : ''}
+              {client.paymentTerms.dueDay
+                ? ` · Vencimento habitual: dia ${client.paymentTerms.dueDay}`
+                : ''}
+              {client.paymentTerms.firstDueDate
+                ? ` · Primeiro vencimento: ${fmt(client.paymentTerms.firstDueDate)}`
+                : ''}
+            </p>
+            <small>
+              Condições cadastradas; parcelas e pagamentos são controlados separadamente.
+            </small>
+          </div>
+        </div>
+      )}
       <p>{client.notes}</p>
       <div className={op.actions}>
         <button
@@ -89,6 +125,52 @@ export default function ClientHistory({
           Nova renegociação
         </button>
       </div>
+      {!installments.length && paymentTerms && (
+        <section className={styles.note}>
+          {(() => {
+            let planned;
+            try {
+              planned = buildInstallmentPlan(paymentTerms);
+            } catch (error) {
+              return (
+                <div>
+                  Para gerar as parcelas, complete quantidade, valor por parcela e primeiro
+                  vencimento no cadastro do cliente. {error instanceof Error ? error.message : ''}
+                </div>
+              );
+            }
+            const total = planned.reduce((sum, installment) => sum + installment.amountCents, 0);
+            return (
+              <div>
+                <strong>
+                  Prévia: {planned.length} parcelas · Total {money(total)}
+                </strong>
+                <p>
+                  Primeira: {fmt(planned[0].dueDate)} · Última:{' '}
+                  {fmt(planned[planned.length - 1].dueDate)}
+                </p>
+                <p>
+                  {planned
+                    .slice(0, 3)
+                    .map(
+                      (item) =>
+                        `#${item.number}: ${fmt(item.dueDate)} (${money(item.amountCents)})`,
+                    )
+                    .join(' | ')}
+                </p>
+                <button
+                  className={styles.primary}
+                  onClick={() =>
+                    openClient('generate_installments', 'Revisar e gerar parcelas', client)
+                  }
+                >
+                  Confirmar geração das parcelas
+                </button>
+              </div>
+            );
+          })()}
+        </section>
+      )}
       <h3>Parcelas e valores registrados</h3>
       <div className={styles.tableWrap}>
         <table>
@@ -134,14 +216,18 @@ export default function ClientHistory({
                 </td>
                 <td>
                   {p.status === 'paid'
-                    ? 'Quitada'
+                    ? p.historicalPaid
+                      ? 'Quitada (histórico)'
+                      : 'Quitada'
                     : p.status === 'partial'
                       ? 'Pagamento parcial'
                       : p.status === 'cancelled'
                         ? 'Cancelada'
-                        : isOverdue(p, today)
-                          ? 'Vencida'
-                          : 'Em aberto'}
+                        : p.verificationStatus === 'unverified'
+                          ? 'Situação a verificar'
+                          : isOverdue(p, today)
+                            ? 'Vencida'
+                            : 'Em aberto'}
                   {p.scheduledDate && p.status !== 'paid' && (
                     <small className={op.detail}>
                       Previsto: {fmt(p.scheduledDate)} (sem confirmação)
@@ -150,28 +236,45 @@ export default function ClientHistory({
                 </td>
                 <td>
                   <div className={op.actions}>
+                    {p.verificationStatus === 'unverified' && p.status !== 'cancelled' && (
+                      <button
+                        className={op.actionReview}
+                        onClick={() =>
+                          openClient(
+                            'verify_installment',
+                            'Verificar situação da parcela',
+                            client,
+                            p,
+                          )
+                        }
+                      >
+                        <ClipboardCheck size={16} /> Verificar situação
+                      </button>
+                    )}
                     <button
-                      className={styles.secondary}
+                      className={op.actionNeutral}
                       disabled={p.status === 'paid'}
                       onClick={() => openClient('save_installment', 'Editar parcela', client, p)}
                     >
-                      Editar
+                      <Pencil size={16} /> Editar parcela
                     </button>
                     <button
-                      className={styles.secondary}
+                      className={op.actionPayment}
                       disabled={p.status === 'paid' || p.status === 'cancelled'}
                       onClick={() =>
-                        openClient('confirm_payment', 'Confirmar pagamento da parcela', client, p)
+                        openClient('confirm_payment', 'Registrar pagamento identificado', client, p)
                       }
                     >
-                      Confirmar pagamento
+                      <CircleCheck size={16} /> Registrar pagamento
                     </button>
                     <button
-                      className={styles.secondary}
+                      className={op.actionSchedule}
                       disabled={p.status === 'paid' || p.status === 'cancelled'}
-                      onClick={() => openClient('schedule_payment', 'Agendar pagamento', client, p)}
+                      onClick={() =>
+                        openClient('schedule_payment', 'Registrar previsão de pagamento', client, p)
+                      }
                     >
-                      Agendar
+                      <CalendarClock size={16} /> Previsão de pagamento
                     </button>
                   </div>
                 </td>

@@ -1,4 +1,6 @@
 import { formatCurrency, isUnpaid, outstandingCents } from '../../collection-status';
+import { buildInstallmentPlan } from '../../installment-plan';
+import { applyHistoricalPayment, validateHistoricalPayments } from '../../historical-installments';
 import { type Installment } from '../../collection-types';
 import { audit, put } from '../../database/operations-repository';
 import { date, money, pick, text } from '../../validation/operation-values';
@@ -6,7 +8,51 @@ import type { OperationContext } from '../operation-context';
 export function handleInstallmentCommand(type: string, context: OperationContext) {
   const { command, database, state, today, now, getClient, getInstallment, resolve, activity } =
     context;
-  if (type === 'save_installment') {
+  if (type === 'generate_installments') {
+    const client = getClient(command.clientId);
+    if (state.installments.some((installment) => installment.clientId === client.id)) {
+      throw Error('Este cliente já possui parcelas. Revise a carteira para evitar duplicação.');
+    }
+    if (!client.paymentTerms) throw Error('Cadastre primeiro as condições de pagamento');
+    if (command.confirmed !== true) throw Error('Confirmação manual obrigatória');
+    const reference = text(command.reference, 'Referência do contrato', true);
+    const plan = buildInstallmentPlan(client.paymentTerms);
+    const historical = validateHistoricalPayments(command.historicalPayments, plan, today);
+    for (const draft of plan) {
+      const base: Installment = {
+        id: crypto.randomUUID(),
+        clientId: client.id,
+        reference,
+        number: draft.number,
+        amountCents: draft.amountCents,
+        dueDate: draft.dueDate,
+        paidDate: '',
+        paidCents: 0,
+        // The operator explicitly confirms the historical paid installments
+        // in this wizard; remaining overdue installments become eligible for
+        // current follow-up without another generic review step.
+        verificationStatus: 'verified',
+        collectionStartDate: draft.dueDate < today ? today : undefined,
+        status: 'open',
+        chargesCents: 0,
+        chargeStatus: 'verify',
+        scheduledDate: '',
+        createdAt: now,
+      };
+      const installment = applyHistoricalPayment(base, historical.get(draft.number));
+      put(database, 'op_installments', installment, true);
+      audit(
+        database,
+        'installment',
+        installment.id,
+        null,
+        installment,
+        installment.historicalPaid
+          ? 'Importação de pagamento histórico confirmado, sem atividade operacional retroativa'
+          : 'Geração contratual confirmada manualmente',
+      );
+    }
+  } else if (type === 'save_installment') {
     const c = getClient(command.clientId),
       old = state.installments.find((p) => p.id === command.id);
     if (old && old.clientId !== c.id)
@@ -22,6 +68,8 @@ export function handleInstallmentCommand(type: string, context: OperationContext
       dueDate: date(command.dueDate),
       paidDate: old?.paidDate || '',
       paidCents: old?.paidCents || 0,
+      verificationStatus: old ? old.verificationStatus : 'unverified',
+      collectionStartDate: old?.collectionStartDate,
       status: old?.status || 'open',
       chargesCents: money(command.chargesCents ?? 0, 'Encargos'),
       chargeStatus: pick(
@@ -53,6 +101,35 @@ export function handleInstallmentCommand(type: string, context: OperationContext
       : 'Cadastro manual';
     put(database, 'op_installments', p);
     audit(database, 'installment', p.id, old ?? null, p, reason);
+  } else if (type === 'verify_installment') {
+    if (command.confirmed !== true) throw Error('Confirmação manual obrigatória');
+    const old = getInstallment(command.installmentId);
+    if (!isUnpaid(old)) throw Error('A parcela já está quitada ou cancelada');
+    if (old.verificationStatus === 'verified') throw Error('Situação da parcela já foi verificada');
+    const updated: Installment = {
+      ...old,
+      verificationStatus: 'verified',
+      collectionStartDate: today,
+    };
+    put(database, 'op_installments', updated);
+    audit(
+      database,
+      'installment',
+      old.id,
+      old,
+      updated,
+      'Verificação inicial: parcela segue em aberto, segundo conferência humana',
+    );
+    activity({
+      clientId: old.clientId,
+      installmentId: old.id,
+      action: 'payment_status_checked',
+      category: 'verification',
+      status: 'recorded',
+      result:
+        'Situação da parcela conferida: pagamento ainda não confirmado. ' +
+        'A régua pode propor ações a partir desta verificação.',
+    });
   } else if (type === 'schedule_payment') {
     const old = getInstallment(command.installmentId);
     if (!isUnpaid(old)) throw Error('Parcela já quitada ou cancelada');
@@ -86,6 +163,7 @@ export function handleInstallmentCommand(type: string, context: OperationContext
       ...old,
       paidCents,
       paidDate,
+      verificationStatus: 'verified' as const,
       status: settled ? ('paid' as const) : ('partial' as const),
     };
     put(database, 'op_installments', p);
@@ -94,10 +172,10 @@ export function handleInstallmentCommand(type: string, context: OperationContext
       clientId: p.clientId,
       installmentId: p.id,
       action: 'payment_confirmed',
-      category: 'conciliation',
+      category: 'payment',
       status: settled ? 'paid' : 'partial',
       amountCents,
-      result: `Conciliação registrada: ${formatCurrency(amountCents)}. ${settled ? 'Parcela quitada.' : 'Pagamento parcial; saldo permanece aberto.'} Data do pagamento: ${paidDate}.`,
+      result: `Pagamento confirmado no controle local: ${formatCurrency(amountCents)}. ${settled ? 'Parcela quitada.' : 'Pagamento parcial; saldo permanece aberto.'} Data do pagamento: ${paidDate}.`,
     });
     if (settled)
       for (const task of state.pending.filter(

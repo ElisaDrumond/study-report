@@ -7,7 +7,7 @@ export const categories: Record<Category, string> = {
   lateover: 'Acompanhamento — atraso superior a 30 dias',
   renegotiation: 'Renegociação',
   message: 'Mensagem respondida',
-  conciliation: 'Conciliação',
+  conciliation: 'Conciliação Study (tarefa no sistema)',
   other: 'Outra atividade',
 };
 export const actions: Record<Action, string> = {
@@ -18,7 +18,7 @@ export const actions: Record<Action, string> = {
   email_replied: 'E-mail respondido',
   message_replied: 'Mensagem respondida',
   payment_checked: 'Pagamento conferido / CRM atualizado',
-  conciliation_done: 'Conciliação realizada',
+  conciliation_done: 'Conciliação Study realizada',
   call: 'Ligação realizada',
   followup: 'Acompanhamento / conferência',
   other_action: 'Outra ação',
@@ -172,6 +172,8 @@ export function cleanEntry(raw: Partial<Entry>): Entry {
     : defaultStatus[effectiveCategory];
   return {
     id: String(raw.id || crypto.randomUUID()),
+    clientId: typeof raw.clientId === 'string' ? raw.clientId.trim() : '',
+    installmentId: typeof raw.installmentId === 'string' ? raw.installmentId.trim() : '',
     name: String(raw.name || '').trim(),
     category: effectiveCategory,
     action,
@@ -274,7 +276,7 @@ export function buildReport(
   const conc = inCat('conciliation');
   if (conc.length)
     add(
-      'Conciliações financeiras',
+      'Conciliações realizadas no sistema Study',
       `${bullet(conc.map((r) => `${r.name}${r.notes ? ` — ${r.notes}` : ''}`))}\n\n${plural(conc.length, 'conciliação concluída/registrada', 'conciliações concluídas/registradas')}.`,
     );
   if (reneg.length)

@@ -11,12 +11,15 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { RefinementStyle } from '../../../lib/refinement';
+import type { Client, Installment } from '../../../lib/collection-types';
 import { categories, cleanEntry, fmt, follow, validateEntry } from '../../../lib/rules';
 import type { Entry, SavedReport, Task } from '../../../lib/types';
 import type { Tab } from './dashboard-model';
 import { route, today } from './dashboard-model';
 export function useDashboard() {
   const [tab, setTab] = useState<Tab>('central');
+  const [clients, setClients] = useState<Client[]>([]);
+  const [installments, setInstallments] = useState<Installment[]>([]);
   const [date, setDate] = useState(today());
   const [records, setRecords] = useState<Entry[]>([]),
     [tasks, setTasks] = useState<Task[]>([]),
@@ -26,6 +29,9 @@ export function useDashboard() {
     [toast, setToast] = useState('');
   const [query, setQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState<'all' | 'selected' | 'range'>('selected');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
   const [editing, setEditing] = useState<Entry | null>(null),
     [editingTask, setEditingTask] = useState<Task | null>(null);
   const [subject, setSubject] = useState(''),
@@ -68,10 +74,17 @@ export function useDashboard() {
   const notice = (msg: string) => setToast(msg);
   const refresh = useCallback(async () => {
     try {
-      const [r, t, h] = await Promise.all([route('records'), route('tasks'), route('reports')]);
+      const [r, t, h, operations] = await Promise.all([
+        route('records'),
+        route('tasks'),
+        route('reports'),
+        route('operations'),
+      ]);
       setRecords(r);
       setTasks(t);
       setHistory(h);
+      setClients(operations.clients);
+      setInstallments(operations.installments);
     } catch (e) {
       notice((e as Error).message);
     } finally {
@@ -81,12 +94,37 @@ export function useDashboard() {
   useEffect(() => {
     refresh();
   }, [refresh]);
+
+  // Clients added in the operational view must be available when returning to activities.
+  useEffect(() => {
+    if (tab !== 'activities') return;
+    let active = true;
+    Promise.all([route('operations'), route('records')])
+      .then(([operations, latestRecords]) => {
+        if (active) {
+          setClients(operations.clients);
+          setInstallments(operations.installments);
+          setRecords(latestRecords);
+        }
+      })
+      .catch((error) => {
+        if (active) setToast((error as Error).message);
+      });
+    return () => {
+      active = false;
+    };
+  }, [tab]);
   const filtered = useMemo(
     () =>
       records
         .filter(
           (r) =>
             (categoryFilter === 'all' || r.category === categoryFilter) &&
+            (dateFilter === 'all' ||
+              (dateFilter === 'selected' && r.date === date) ||
+              (dateFilter === 'range' &&
+                (!fromDate || r.date >= fromDate) &&
+                (!toDate || r.date <= toDate))) &&
             (!query ||
               [r.name, r.notes, categories[r.category]]
                 .join(' ')
@@ -94,7 +132,7 @@ export function useDashboard() {
                 .includes(query.toLocaleLowerCase('pt-BR'))),
         )
         .sort((a, b) => b.date.localeCompare(a.date)),
-    [records, categoryFilter, query],
+    [records, categoryFilter, query, dateFilter, date, fromDate, toDate],
   );
   const selected = records.filter((r) => r.date === date && r.action !== 'none');
   const unique = new Set(selected.map((r) => r.name.trim().toLocaleLowerCase('pt-BR'))).size;
@@ -134,7 +172,8 @@ export function useDashboard() {
   ];
   async function saveRecord() {
     if (!editing) return;
-    const r = cleanEntry(editing);
+    const selectedClient = clients.find((client) => client.id === editing.clientId);
+    const r = cleanEntry({ ...editing, name: selectedClient?.name || editing.name });
     const errors = validateEntry(r);
     if (errors.length) {
       notice('Corrija o registro: ' + errors.join('; '));
@@ -298,6 +337,8 @@ export function useDashboard() {
     ['history', 'Histórico', BookOpen],
   ];
   return {
+    clients,
+    installments,
     navOpen,
     navigation,
     tab,
@@ -318,6 +359,12 @@ export function useDashboard() {
     setQuery,
     categoryFilter,
     setCategoryFilter,
+    dateFilter,
+    setDateFilter,
+    fromDate,
+    setFromDate,
+    toDate,
+    setToDate,
     downloadBackup,
     importBackup,
     filtered,

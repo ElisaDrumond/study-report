@@ -8,6 +8,39 @@ import { reconcileTasks } from '../task-generator';
 export function processOperations(database = defaultDb(), referenceDate?: string) {
   return database.transaction(() => {
     let state = snapshot(database);
+    // Existing schedules created before verification was introduced must be
+    // reviewed, not silently treated as confirmed unpaid debt.
+    const generatedIds = new Set(
+      state.audit
+        .filter(
+          (event) =>
+            event.entity === 'installment' &&
+            event.reason === 'Geração contratual confirmada manualmente',
+        )
+        .map((event) => event.entityId),
+    );
+    let verificationMigrated = false;
+    for (const installment of state.installments) {
+      if (
+        generatedIds.has(installment.id) &&
+        installment.verificationStatus === undefined &&
+        installment.status === 'open' &&
+        installment.paidCents === 0
+      ) {
+        const updated = { ...installment, verificationStatus: 'unverified' as const };
+        put(database, 'op_installments', updated);
+        audit(
+          database,
+          'installment',
+          installment.id,
+          installment,
+          updated,
+          'Situação inicial a verificar; nenhum pagamento inferido',
+        );
+        verificationMigrated = true;
+      }
+    }
+    if (verificationMigrated) state = snapshot(database);
     const today = referenceDate ?? operationToday(state.settings.timezone);
     const next = reconcileTasks(state.pending, generateCollectionTasks(state, today)).map((t) =>
       t.status === 'deferred'
@@ -41,6 +74,9 @@ export function processOperations(database = defaultDb(), referenceDate?: string
       const overdue = state.installments.some(
         (p) => p.clientId === client.id && isOverdue(p, today),
       );
+      const verificationPending = state.installments.some(
+        (p) => p.clientId === client.id && p.verificationStatus === 'unverified' && isUnpaid(p),
+      );
       const blocked = next.some(
         (p) =>
           p.clientId === client.id && p.kind === 'block' && ['open', 'deferred'].includes(p.status),
@@ -63,7 +99,11 @@ export function processOperations(database = defaultDb(), referenceDate?: string
                 : client.serviceStatus;
       const updated: Client = {
         ...client,
-        financialStatus: overdue ? 'overdue' : 'current',
+        financialStatus: overdue
+          ? 'overdue'
+          : verificationPending
+            ? 'verification_pending'
+            : 'current',
         serviceStatus,
         serviceOverride: overdue ? client.serviceOverride : false,
       };

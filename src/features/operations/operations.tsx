@@ -12,8 +12,15 @@ import OperationDialog from './operation-dialog';
 import { useOperations } from './use-operations';
 
 type OperationsView = 'central' | 'clients' | 'calendar';
+type OperationsDestination = OperationsView | 'activities';
 
-export default function Operations({ view }: { view: OperationsView }) {
+export default function Operations({
+  view,
+  onNavigate,
+}: {
+  view: OperationsView;
+  onNavigate: (destination: OperationsDestination) => void;
+}) {
   const {
     today,
     operationsState,
@@ -104,6 +111,7 @@ export default function Operations({ view }: { view: OperationsView }) {
           today={today}
           openTask={openTask}
           setHistoryClient={setHistoryClient}
+          onNavigate={onNavigate}
         />
       )}
 
@@ -119,7 +127,7 @@ export default function Operations({ view }: { view: OperationsView }) {
           openClient={openClient}
           setHistoryClient={setHistoryClient}
           today={today}
-          historyClient={historyClient}
+          onNavigate={onNavigate}
         />
       )}
 
@@ -143,6 +151,7 @@ export default function Operations({ view }: { view: OperationsView }) {
           today={today}
           setSelectedClient={setSelectedClient}
           setDialog={setDialog}
+          onNavigate={onNavigate}
         />
       )}
 

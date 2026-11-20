@@ -11,12 +11,21 @@ import {
   statuses,
 } from '../../../lib/rules';
 import type { Action, Category, Status } from '../../../lib/types';
+import type { Client, Installment } from '../../../lib/collection-types';
 import type { DashboardController } from './use-dashboard';
 type Props = Pick<
   DashboardController,
   'setEditing' | 'records' | 'editing' | 'saving' | 'saveRecord'
->;
-export default function EntryDialog({ setEditing, records, editing, saving, saveRecord }: Props) {
+> & { clients: Client[]; installments: Installment[] };
+export default function EntryDialog({
+  setEditing,
+  records,
+  editing,
+  saving,
+  saveRecord,
+  clients,
+  installments,
+}: Props) {
   if (!editing) return null;
   return (
     <div
@@ -41,11 +50,58 @@ export default function EntryDialog({ setEditing, records, editing, saving, save
           <label className={`${styles.field} ${styles.wide}`}>
             Nome do cliente *
             <input
+              list="registered-clients"
               value={editing.name}
-              onChange={(e) => setEditing({ ...editing, name: e.target.value })}
-              placeholder="Nome completo"
+              onChange={(event) => {
+                const name = event.target.value;
+                const matches = clients.filter(
+                  (client) =>
+                    client.name.toLocaleLowerCase('pt-BR') ===
+                    name.trim().toLocaleLowerCase('pt-BR'),
+                );
+                setEditing({
+                  ...editing,
+                  name,
+                  clientId: matches.length === 1 ? matches[0].id : '',
+                  installmentId:
+                    matches.length === 1 && matches[0].id === editing.clientId
+                      ? editing.installmentId
+                      : '',
+                });
+              }}
+              placeholder="Digite para buscar um cliente cadastrado"
             />
+            <datalist id="registered-clients">
+              {clients.map((client) => (
+                <option key={client.id} value={client.name} />
+              ))}
+            </datalist>
+            <small>
+              {editing.clientId
+                ? 'Vinculado ao cadastro da carteira operacional.'
+                : 'Sem vínculo: selecione uma sugestão ou cadastre o cliente na carteira.'}
+            </small>
           </label>
+          {editing.clientId && (
+            <label className={`${styles.field} ${styles.wide}`}>
+              Parcela vinculada (opcional)
+              <select
+                value={editing.installmentId || ''}
+                onChange={(event) => setEditing({ ...editing, installmentId: event.target.value })}
+              >
+                <option value="">Atividade geral do cliente</option>
+                {installments
+                  .filter((installment) => installment.clientId === editing.clientId)
+                  .sort((first, second) => first.number - second.number)
+                  .map((installment) => (
+                    <option key={installment.id} value={installment.id}>
+                      {installment.reference} · parcela {installment.number} · vencimento{' '}
+                      {installment.dueDate}
+                    </option>
+                  ))}
+              </select>
+            </label>
+          )}
           <label className={styles.field}>
             Categoria
             <select

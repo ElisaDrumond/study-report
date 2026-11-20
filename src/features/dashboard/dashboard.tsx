@@ -19,6 +19,8 @@ import { useDashboard } from './use-dashboard';
 export default function Dashboard() {
   const controller = useDashboard();
   const {
+    clients,
+    installments,
     navOpen,
     navigation,
     tab,
@@ -39,6 +41,12 @@ export default function Dashboard() {
     setQuery,
     categoryFilter,
     setCategoryFilter,
+    dateFilter,
+    setDateFilter,
+    fromDate,
+    setFromDate,
+    toDate,
+    setToDate,
     downloadBackup,
     importBackup,
     filtered,
@@ -112,7 +120,9 @@ export default function Dashboard() {
           <div className={styles.card}>Carregando registros locais...</div>
         ) : (
           <>
-            {isOperationsView && <Operations key={tab} view={tab} />}
+            {isOperationsView && (
+              <Operations key={tab} view={tab} onNavigate={(destination) => setTab(destination)} />
+            )}
 
             {tab === 'overview' && (
               <OverviewPanel
@@ -134,6 +144,12 @@ export default function Dashboard() {
                 setQuery={setQuery}
                 categoryFilter={categoryFilter}
                 setCategoryFilter={setCategoryFilter}
+                dateFilter={dateFilter}
+                setDateFilter={setDateFilter}
+                fromDate={fromDate}
+                setFromDate={setFromDate}
+                toDate={toDate}
+                setToDate={setToDate}
                 downloadBackup={downloadBackup}
                 importBackup={importBackup}
                 filtered={filtered}
@@ -218,6 +234,8 @@ export default function Dashboard() {
         <EntryDialog
           setEditing={setEditing}
           records={records}
+          clients={clients}
+          installments={installments}
           editing={editing}
           saving={saving}
           saveRecord={saveRecord}

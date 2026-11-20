@@ -116,7 +116,7 @@ export function useOperations(view: 'central' | 'clients' | 'calendar') {
       'Casos para análise da gestão',
       new Set(
         active
-          .filter((t) => ['management', 'renegotiate', 'external_review'].includes(t.kind))
+          .filter((t) => ['management', 'renegotiate'].includes(t.kind))
           .map((t) => t.clientId),
       ).size,
     ],
@@ -188,7 +188,33 @@ export function useOperations(view: 'central' | 'clients' | 'calendar') {
       awaitingReply: data.get('awaitingReply') === 'on',
     };
     try {
-      if (dialog.type === 'save_client') command.id = dialog.client?.id;
+      if (dialog.type === 'save_client') {
+        command.id = dialog.client?.id;
+        command.paymentTerms = {
+          purchaseDescription: String(data.get('purchaseDescription') ?? ''),
+          installmentCount: String(data.get('installmentCount') ?? ''),
+          installmentAmountCents: data.get('installmentAmount')
+            ? cents(data.get('installmentAmount'))
+            : '',
+          frequency: String(data.get('frequency') ?? 'monthly'),
+          dueDay: String(data.get('dueDay') ?? ''),
+          firstDueDate: String(data.get('firstDueDate') ?? ''),
+        };
+      }
+      if (dialog.type === 'generate_installments') {
+        const paidNumbers = [...data.keys()]
+          .map((key) => /^historicalPaid_(\d+)$/.exec(key)?.[1])
+          .filter((value): value is string => !!value);
+        command.historicalPayments = paidNumbers.map((numberString) => {
+          const number = Number(numberString);
+          return {
+            number,
+            paidDate: String(data.get(`historicalDate_${number}`) ?? ''),
+            paidCents: cents(data.get(`historicalAmount_${number}`)),
+            chargesCents: cents(data.get(`historicalCharges_${number}`)),
+          };
+        });
+      }
       if (dialog.type === 'save_installment') {
         command.id = dialog.installment?.id;
         command.amountCents = cents(data.get('amount'));
@@ -198,6 +224,7 @@ export function useOperations(view: 'central' | 'clients' | 'calendar') {
       if (dialog.type === 'confirm_payment') command.amountCents = cents(data.get('amount'));
       if (dialog.type === 'save_negotiation') {
         command.id = dialog.negotiation?.id;
+        command.scope = data.get('scope');
         command.installmentIds = data.getAll('installmentIds');
       }
       if (dialog.type === 'save_calendar') command.id = dialog.exceptionId;

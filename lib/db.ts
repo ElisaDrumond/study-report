@@ -38,6 +38,7 @@ CREATE INDEX IF NOT EXISTS idx_reports_date ON reports(date);
       }
       migrateReports(instance);
       migrateOperations(instance);
+      migrateEntryClientIds(instance);
     } catch (error) {
       instance.close();
       instance = undefined;
@@ -57,6 +58,21 @@ export function migrateReports(database: Database.Database) {
       if (!columns.has(name)) database.exec(`ALTER TABLE reports ADD COLUMN ${name} TEXT`);
   })();
 }
+export function migrateEntryClientIds(database: Database.Database) {
+  const columns = new Set(
+    (database.prepare('PRAGMA table_info(entries)').all() as { name: string }[]).map(
+      (column) => column.name,
+    ),
+  );
+  if (!columns.has('clientId')) {
+    database.exec('ALTER TABLE entries ADD COLUMN clientId TEXT');
+  }
+  database.exec('CREATE INDEX IF NOT EXISTS idx_entries_client ON entries(clientId)');
+  if (!columns.has('installmentId')) {
+    database.exec('ALTER TABLE entries ADD COLUMN installmentId TEXT');
+  }
+}
+
 export const getEntries = () =>
   db().prepare('SELECT * FROM entries ORDER BY date DESC, updatedAt DESC').all() as Entry[];
 export const getTasks = () =>
@@ -67,9 +83,9 @@ export function saveEntry(r: Entry) {
   const now = new Date().toISOString();
   db()
     .prepare(
-      `INSERT INTO entries(id,name,category,action,status,date,days,lastContact,scheduled,notes,createdAt,updatedAt) VALUES(@id,@name,@category,@action,@status,@date,@days,@lastContact,@scheduled,@notes,@now,@now) ON CONFLICT(id) DO UPDATE SET name=excluded.name,category=excluded.category,action=excluded.action,status=excluded.status,date=excluded.date,days=excluded.days,lastContact=excluded.lastContact,scheduled=excluded.scheduled,notes=excluded.notes,updatedAt=excluded.updatedAt`,
+      `INSERT INTO entries(id,name,category,action,status,date,days,lastContact,scheduled,notes,clientId,installmentId,createdAt,updatedAt) VALUES(@id,@name,@category,@action,@status,@date,@days,@lastContact,@scheduled,@notes,@clientId,@installmentId,@now,@now) ON CONFLICT(id) DO UPDATE SET name=excluded.name,category=excluded.category,action=excluded.action,status=excluded.status,date=excluded.date,days=excluded.days,lastContact=excluded.lastContact,scheduled=excluded.scheduled,notes=excluded.notes,clientId=excluded.clientId,installmentId=excluded.installmentId,updatedAt=excluded.updatedAt`,
     )
-    .run({ ...r, now });
+    .run({ ...r, clientId: r.clientId || null, installmentId: r.installmentId || null, now });
 }
 export function saveTask(t: Task) {
   db()
