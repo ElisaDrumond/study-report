@@ -22,10 +22,10 @@ export default function HistoricalPaymentsFields({ plan, today }: Props) {
         multa/encargos específicos em USD.
       </p>
       <p>
-        As parcelas vencidas não marcadas serão consideradas em aberto e entrarão no
-        acompanhamento atual. A Central sugerirá cobranças ou avaliação externa conforme
-        o atraso, sem enviar mensagens automaticamente. O cadastro histórico não será
-        contado como atividade realizada hoje.
+        As parcelas vencidas não marcadas serão consideradas em aberto e entrarão no acompanhamento
+        atual. A Central sugerirá cobranças ou avaliação externa conforme o atraso, sem enviar
+        mensagens automaticamente. O cadastro histórico não será contado como atividade realizada
+        hoje.
       </p>
       {past.map((item) => {
         const checked = selected.includes(item.number);

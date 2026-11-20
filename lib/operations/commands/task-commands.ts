@@ -57,7 +57,11 @@ export function handleTaskCommand(type: string, context: OperationContext) {
       const overdue = state.installments.filter(
         (item) => item.clientId === c.id && isOverdue(item, today),
       );
-      if (!overdue.length || Math.max(...overdue.map((item) => daysOverdue(item, today))) < state.settings.externalReviewDays)
+      if (
+        !overdue.length ||
+        Math.max(...overdue.map((item) => daysOverdue(item, today))) <
+          state.settings.externalReviewDays
+      )
         throw Error('Encaminhamento externo disponível somente após o limite de atraso');
       text(command.notes, 'Justificativa', true);
       const balance = overdue.reduce((total, item) => total + outstandingCents(item), 0);
@@ -179,9 +183,10 @@ export function handleTaskCommand(type: string, context: OperationContext) {
       const overdue = contact
         ? state.installments.filter((item) => item.clientId === c.id && isOverdue(item, today))
         : [];
-      const consolidated = overdue.length >= 2
-        ? `${overdue.length} parcelas vencidas; saldo vencido ${formatCurrency(overdue.reduce((sum, item) => sum + outstandingCents(item), 0))}. `
-        : '';
+      const consolidated =
+        overdue.length >= 2
+          ? `${overdue.length} parcelas vencidas; saldo vencido ${formatCurrency(overdue.reduce((sum, item) => sum + outstandingCents(item), 0))}. `
+          : '';
       const a = activity({
         clientId: c.id,
         installmentId: p?.id || '',

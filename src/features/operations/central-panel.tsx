@@ -148,9 +148,13 @@ export default function CentralPanel({
             <h3>{task.recommendation}</h3>
             {(() => {
               const debt = overdueDebt(operationsState.installments, task.clientId, today);
-              return debt.count >= 2 && ['alternate', 'initial', 'window', 'renegotiate'].includes(task.kind)
-                ? <p className={op.detail}><strong>Saldo vencido consolidado:</strong> {debt.count} parcelas · {money(debt.amountCents)} (sem as parcelas futuras).</p>
-                : null;
+              return debt.count >= 2 &&
+                ['alternate', 'initial', 'window', 'renegotiate'].includes(task.kind) ? (
+                <p className={op.detail}>
+                  <strong>Saldo vencido consolidado:</strong> {debt.count} parcelas ·{' '}
+                  {money(debt.amountCents)} (sem as parcelas futuras).
+                </p>
+              ) : null;
             })()}
             <p>{task.reason}</p>
             <p className={styles.subhead}>
@@ -173,62 +177,97 @@ export default function CentralPanel({
               {['open', 'deferred'].includes(task.status) && (
                 <>
                   {['block', 'unblock'].includes(task.kind) ? (
-                    <button className={styles.primary}
-                      onClick={() => openTask('service', task, 'Registrar alteração de atendimento')}>
+                    <button
+                      className={styles.primary}
+                      onClick={() =>
+                        openTask('service', task, 'Registrar alteração de atendimento')
+                      }
+                    >
                       Registrar {task.kind === 'block' ? 'bloqueio' : 'desbloqueio'}
                     </button>
                   ) : ['advance', 'due', 'initial', 'window', 'alternate'].includes(task.kind) ? (
-                    <button className={styles.primary}
-                      onClick={() => openTask('record_contact', task, 'Registrar cobrança realizada')}>
+                    <button
+                      className={styles.primary}
+                      onClick={() =>
+                        openTask('record_contact', task, 'Registrar cobrança realizada')
+                      }
+                    >
                       Registrar contato de cobrança
                     </button>
                   ) : task.kind === 'renegotiate' ? (
-                    <button className={styles.primary}
-                      onClick={() => openTask('save_negotiation', task, 'Registrar proposta de renegociação')}>
+                    <button
+                      className={styles.primary}
+                      onClick={() =>
+                        openTask('save_negotiation', task, 'Registrar proposta de renegociação')
+                      }
+                    >
                       Iniciar renegociação
                     </button>
                   ) : task.kind.startsWith('scheduled') ? (
-                    <button className={styles.primary}
+                    <button
+                      className={styles.primary}
                       disabled={task.dueDate > today}
-                      onClick={() => openTask('payment_not_found', task, 'Registrar pagamento não localizado')}>
+                      onClick={() =>
+                        openTask('payment_not_found', task, 'Registrar pagamento não localizado')
+                      }
+                    >
                       Pagamento não localizado
                     </button>
                   ) : task.kind === 'management' ? (
-                    <button className={styles.primary}
-                      onClick={() => openTask('management', task, 'Solicitar decisão da gestão')}>
+                    <button
+                      className={styles.primary}
+                      onClick={() => openTask('management', task, 'Solicitar decisão da gestão')}
+                    >
                       Solicitar decisão da gestão
                     </button>
                   ) : (
-                    <button className={styles.primary}
-                      onClick={() => openTask('complete_task', task, 'Registrar execução da tarefa')}>
+                    <button
+                      className={styles.primary}
+                      onClick={() =>
+                        openTask('complete_task', task, 'Registrar execução da tarefa')
+                      }
+                    >
                       Registrar tarefa executada
                     </button>
                   )}
                   {task.kind === 'alternate' &&
-                    operationsState.clients.find((client) => client.id === task.clientId)?.financialStatus !== 'external' &&
-                    operationsState.installments.some((installment) =>
-                      installment.clientId === task.clientId &&
-                      isOverdue(installment, today) &&
-                      daysOverdue(installment, today) >= operationsState.settings.externalReviewDays
+                    operationsState.clients.find((client) => client.id === task.clientId)
+                      ?.financialStatus !== 'external' &&
+                    operationsState.installments.some(
+                      (installment) =>
+                        installment.clientId === task.clientId &&
+                        isOverdue(installment, today) &&
+                        daysOverdue(installment, today) >=
+                          operationsState.settings.externalReviewDays,
                     ) && (
-                      <button className={styles.secondary}
-                        onClick={() => openTask('external', task, 'Confirmar cobrança externa')}>
+                      <button
+                        className={styles.secondary}
+                        onClick={() => openTask('external', task, 'Confirmar cobrança externa')}
+                      >
                         Encaminhar à cobrança externa
                       </button>
                     )}
                   {task.installmentId && (
-                    <button className={op.actionPayment}
-                      onClick={() => openTask('confirm_payment', task, 'Registrar pagamento identificado')}>
+                    <button
+                      className={op.actionPayment}
+                      onClick={() =>
+                        openTask('confirm_payment', task, 'Registrar pagamento identificado')
+                      }
+                    >
                       <CircleCheck size={16} /> Registrar pagamento
                     </button>
                   )}
-                  <button className={styles.secondary}
-                    onClick={() => openTask('defer_task', task, 'Agendar tarefa')}>
+                  <button
+                    className={styles.secondary}
+                    onClick={() => openTask('defer_task', task, 'Agendar tarefa')}
+                  >
                     <CalendarClock size={16} /> Agendar tarefa
                   </button>
                   {task.kind === 'renegotiate' && (
-                    <button className={styles.secondary}
-                      onClick={() => openTask('management', task, 'Solicitar análise da gestão')}>
+                    <button
+                      className={styles.secondary}
+                      onClick={() => openTask('management', task, 'Solicitar análise da gestão')}
+                    >
                       Solicitar análise da gestão
                     </button>
                   )}

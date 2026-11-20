@@ -516,34 +516,44 @@ test('parcela futura recebe lembretes sem exigir verificação de pagamento hist
 });
 
 test('carteira antiga confirmada sugere cobrança imediata e avaliação externa sem segunda revisão', () => {
-  const database = memory(state({
-    clients: [{
-      ...client,
-      paymentTerms: {
-        purchaseDescription: 'Curso de teste',
-        installmentCount: 3,
-        installmentAmountCents: 30000,
-        frequency: 'monthly',
-        dueDay: 5,
-        firstDueDate: '2026-08-05',
-      },
-    }],
-    installments: [],
-  }));
-  const result = mutateOperation({
-    type: 'generate_installments',
-    clientId: 'c',
-    reference: 'Contrato antigo',
-    confirmed: true,
-    historicalPayments: [
-      { number: 1, paidDate: '2026-08-05', paidCents: 30000, chargesCents: 0 },
-    ],
-  }, database, '2026-11-20');
+  const database = memory(
+    state({
+      clients: [
+        {
+          ...client,
+          paymentTerms: {
+            purchaseDescription: 'Curso de teste',
+            installmentCount: 3,
+            installmentAmountCents: 30000,
+            frequency: 'monthly',
+            dueDay: 5,
+            firstDueDate: '2026-08-05',
+          },
+        },
+      ],
+      installments: [],
+    }),
+  );
+  const result = mutateOperation(
+    {
+      type: 'generate_installments',
+      clientId: 'c',
+      reference: 'Contrato antigo',
+      confirmed: true,
+      historicalPayments: [
+        { number: 1, paidDate: '2026-08-05', paidCents: 30000, chargesCents: 0 },
+      ],
+    },
+    database,
+    '2026-11-20',
+  );
   assert.equal(result.installments[0].status, 'paid');
   assert.equal(result.installments[1].verificationStatus, 'verified');
   assert.equal(result.installments[2].verificationStatus, 'verified');
   assert(result.installments.slice(1).every((item) => item.collectionStartDate === '2026-11-20'));
-  assert(!result.pending.some((task) => task.kind === 'portfolio_review' && task.status === 'open'));
+  assert(
+    !result.pending.some((task) => task.kind === 'portfolio_review' && task.status === 'open'),
+  );
   const active = result.pending.filter((task) => task.status === 'open');
   assert(active.some((task) => task.kind === 'alternate' && task.dueDate === '2026-11-20'));
   assert(!active.some((task) => task.kind === 'external_review'));
@@ -555,62 +565,99 @@ test('carteira antiga confirmada sugere cobrança imediata e avaliação externa
 });
 
 test('cobrança de carteira antiga repete dois dias úteis após contato real, sem revisão intermediária', () => {
-  const database = memory(state({
-    installments: [
-      installment({
-        dueDate: '2026-10-05',
-        verificationStatus: 'verified',
-        collectionStartDate: '2026-11-20',
-      }),
-    ],
-  }));
-  let result = processOperations(database, '2026-11-20');
-  assert(result.pending.some((task) =>
-    task.kind === 'alternate' && task.dueDate === '2026-11-20' && task.status === 'open'));
-  assert(!result.pending.some((task) =>
-    task.kind === 'portfolio_review' && task.status === 'open'));
-  const contacted = {
-    id: 'contact-1', clientId: 'c', installmentId: 'p',
-    action: 'contact', category: 'operational', status: 'recorded',
-    date: '2026-11-20', occurredAt: '2026-11-20T12:00:00Z',
-    channel: 'whatsapp', notes: '', result: 'Contato real registrado',
-    responsible: 'Elisa Anjo', contact: true, taskId: '', amountCents: 0,
-  };
-  database.prepare('INSERT INTO op_activities VALUES (?, ?)').run(
-    contacted.id, JSON.stringify(contacted),
+  const database = memory(
+    state({
+      installments: [
+        installment({
+          dueDate: '2026-10-05',
+          verificationStatus: 'verified',
+          collectionStartDate: '2026-11-20',
+        }),
+      ],
+    }),
   );
+  let result = processOperations(database, '2026-11-20');
+  assert(
+    result.pending.some(
+      (task) =>
+        task.kind === 'alternate' && task.dueDate === '2026-11-20' && task.status === 'open',
+    ),
+  );
+  assert(
+    !result.pending.some((task) => task.kind === 'portfolio_review' && task.status === 'open'),
+  );
+  const contacted = {
+    id: 'contact-1',
+    clientId: 'c',
+    installmentId: 'p',
+    action: 'contact',
+    category: 'operational',
+    status: 'recorded',
+    date: '2026-11-20',
+    occurredAt: '2026-11-20T12:00:00Z',
+    channel: 'whatsapp',
+    notes: '',
+    result: 'Contato real registrado',
+    responsible: 'Elisa Anjo',
+    contact: true,
+    taskId: '',
+    amountCents: 0,
+  };
+  database
+    .prepare('INSERT INTO op_activities VALUES (?, ?)')
+    .run(contacted.id, JSON.stringify(contacted));
   result = processOperations(database, '2026-11-20');
-  assert(result.pending.some((task) =>
-    task.kind === 'alternate' && task.dueDate === '2026-11-24' && task.status === 'open'));
-  assert(!result.pending.some((task) =>
-    task.kind === 'alternate' && task.dueDate === '2026-11-20' && task.status === 'open'));
+  assert(
+    result.pending.some(
+      (task) =>
+        task.kind === 'alternate' && task.dueDate === '2026-11-24' && task.status === 'open',
+    ),
+  );
+  assert(
+    !result.pending.some(
+      (task) =>
+        task.kind === 'alternate' && task.dueDate === '2026-11-20' && task.status === 'open',
+    ),
+  );
   database.close();
 });
 
 test('revisão inicial antiga pendente deixa de aparecer quando a régua é recalculada', () => {
-  const database = memory(state({
-    installments: [
-      installment({
-        dueDate: '2026-10-05',
-        verificationStatus: 'verified',
-        collectionStartDate: '2026-11-20',
-      }),
-    ],
-    pending: [{
-      id: JSON.stringify(['portfolio_review', 'c', 'p', '2026-11-20']),
-      clientId: 'c', installmentId: 'p', kind: 'portfolio_review',
-      rule: 'portfolio_review', cycle: '2026-11-20',
-      dueDate: '2026-11-20', priority: 'high', status: 'open',
-      reason: 'Revisão redundante', recommendation: 'Revisar parcela',
-      completedAt: '', deferReason: '', resolvedActivityId: '',
-      createdAt: '2026-11-20',
-    }],
-  }));
+  const database = memory(
+    state({
+      installments: [
+        installment({
+          dueDate: '2026-10-05',
+          verificationStatus: 'verified',
+          collectionStartDate: '2026-11-20',
+        }),
+      ],
+      pending: [
+        {
+          id: JSON.stringify(['portfolio_review', 'c', 'p', '2026-11-20']),
+          clientId: 'c',
+          installmentId: 'p',
+          kind: 'portfolio_review',
+          rule: 'portfolio_review',
+          cycle: '2026-11-20',
+          dueDate: '2026-11-20',
+          priority: 'high',
+          status: 'open',
+          reason: 'Revisão redundante',
+          recommendation: 'Revisar parcela',
+          completedAt: '',
+          deferReason: '',
+          resolvedActivityId: '',
+          createdAt: '2026-11-20',
+        },
+      ],
+    }),
+  );
   const result = processOperations(database, '2026-11-20');
-  assert(result.pending.some((task) =>
-    task.kind === 'portfolio_review' && task.status === 'cancelled'));
-  assert(result.pending.some((task) =>
-    task.kind === 'alternate' && task.status === 'open'));
+  assert(
+    result.pending.some((task) => task.kind === 'portfolio_review' && task.status === 'cancelled'),
+  );
+  assert(result.pending.some((task) => task.kind === 'alternate' && task.status === 'open'));
   database.close();
 });
 
@@ -1030,13 +1077,17 @@ test('renegociação exige aprovação anterior e registra responsável', () => 
   db.close();
 });
 test('encaminhamento externo somente após limite, com confirmação e justificativa', () => {
-  const db = memory(state({
-    installments: [installment({
-      dueDate: '2026-08-05',
-      verificationStatus: 'verified',
-      collectionStartDate: '2026-11-20',
-    })],
-  }));
+  const db = memory(
+    state({
+      installments: [
+        installment({
+          dueDate: '2026-08-05',
+          verificationStatus: 'verified',
+          collectionStartDate: '2026-11-20',
+        }),
+      ],
+    }),
+  );
   assert.throws(
     () => mutateOperation({ type: 'external', clientId: 'c' }, db, '2026-11-20'),
     /confirmação/,
@@ -1067,14 +1118,26 @@ test('encaminhamento externo somente após limite, com confirmação e justifica
   db.close();
 });
 test('encaminhamento externo não é permitido antes do limite configurado', () => {
-  const db = memory(state({
-    installments: [installment({ dueDate: '2026-11-01', verificationStatus: 'verified' })],
-  }));
-  assert.throws(() => mutateOperation({
-    type: 'external', clientId: 'c',
-    confirmed: true, responsible: 'Elisa Anjo',
-    notes: 'Encaminhamento formal conferido',
-  }, db, '2026-11-20'), /somente após o limite/);
+  const db = memory(
+    state({
+      installments: [installment({ dueDate: '2026-11-01', verificationStatus: 'verified' })],
+    }),
+  );
+  assert.throws(
+    () =>
+      mutateOperation(
+        {
+          type: 'external',
+          clientId: 'c',
+          confirmed: true,
+          responsible: 'Elisa Anjo',
+          notes: 'Encaminhamento formal conferido',
+        },
+        db,
+        '2026-11-20',
+      ),
+    /somente após o limite/,
+  );
   assert.notEqual(snapshot(db).clients[0].financialStatus, 'external');
   db.close();
 });
@@ -1084,37 +1147,53 @@ test('agendar tarefa não se confunde com atendimento realizado', () => {
   const initial = processOperations(db, '2026-11-20');
   const due = initial.pending.find((item) => item.kind === 'due');
   assert(due);
-  const result = mutateOperation({
-    type: 'defer_task',
-    taskId: due.id, dueDate: '2026-11-24',
-    responsible: 'Elisa Anjo',
-  }, db, '2026-11-20');
+  const result = mutateOperation(
+    {
+      type: 'defer_task',
+      taskId: due.id,
+      dueDate: '2026-11-24',
+      responsible: 'Elisa Anjo',
+    },
+    db,
+    '2026-11-20',
+  );
   const updated = result.pending.find((item) => item.id === due.id);
   assert.equal(updated.status, 'deferred');
   assert.equal(updated.dueDate, '2026-11-24');
   assert.equal(updated.deferReason, 'Agendamento manual');
-  assert.equal(result.activities.find((a) => a.action === 'task_deferred').reportScope, 'administrative');
+  assert.equal(
+    result.activities.find((a) => a.action === 'task_deferred').reportScope,
+    'administrative',
+  );
   assert.equal(buildOperationalReport('2026-11-20', result, [], []).dailyActions, 0);
   db.close();
 });
 
 test('duas parcelas vencidas consolidam o saldo em cobrança e no contato real', () => {
-  const db = memory(state({
-    installments: [
-      installment({ dueDate: '2026-10-05', amountCents: 45000 }),
-      installment({ id: 'p2', number: 2, dueDate: '2026-11-05', amountCents: 30000 }),
-      installment({ id: 'p3', number: 3, dueDate: '2026-12-05', amountCents: 20000 }),
-    ],
-  }));
+  const db = memory(
+    state({
+      installments: [
+        installment({ dueDate: '2026-10-05', amountCents: 45000 }),
+        installment({ id: 'p2', number: 2, dueDate: '2026-11-05', amountCents: 30000 }),
+        installment({ id: 'p3', number: 3, dueDate: '2026-12-05', amountCents: 20000 }),
+      ],
+    }),
+  );
   const initial = processOperations(db, '2026-11-20');
   const overdue = initial.pending.find((task) => task.kind === 'alternate');
   assert.match(overdue.reason, /750,00/);
   assert.doesNotMatch(overdue.reason, /950,00/);
-  const updated = mutateOperation({
-    type: 'record_contact', taskId: overdue.id,
-    channel: 'whatsapp', result: 'Cliente avisado do débito total',
-    responsible: 'Elisa Anjo',
-  }, db, '2026-11-20');
+  const updated = mutateOperation(
+    {
+      type: 'record_contact',
+      taskId: overdue.id,
+      channel: 'whatsapp',
+      result: 'Cliente avisado do débito total',
+      responsible: 'Elisa Anjo',
+    },
+    db,
+    '2026-11-20',
+  );
   const contact = updated.activities.find((a) => a.action === 'contact');
   assert.match(contact.result, /750,00/);
   assert.match(contact.result, /Cliente avisado/);
@@ -1122,25 +1201,33 @@ test('duas parcelas vencidas consolidam o saldo em cobrança e no contato real',
 });
 
 test('renegociação separa vencidos do saldo restante e não altera parcelas', () => {
-  const db = memory(state({
-    installments: [
-      installment({ dueDate: '2026-10-05', amountCents: 45000 }),
-      installment({ id: 'p2', number: 2, dueDate: '2026-11-05', amountCents: 30000 }),
-      installment({ id: 'p3', number: 3, dueDate: '2026-12-05', amountCents: 20000 }),
-    ],
-  }));
+  const db = memory(
+    state({
+      installments: [
+        installment({ dueDate: '2026-10-05', amountCents: 45000 }),
+        installment({ id: 'p2', number: 2, dueDate: '2026-11-05', amountCents: 30000 }),
+        installment({ id: 'p3', number: 3, dueDate: '2026-12-05', amountCents: 20000 }),
+      ],
+    }),
+  );
   const base = {
-    type: 'save_negotiation', clientId: 'c',
-    requestedDate: '2026-11-20', proposal: 'Analisar novo acordo',
-    status: 'proposal_received', responsible: 'Elisa Anjo',
+    type: 'save_negotiation',
+    clientId: 'c',
+    requestedDate: '2026-11-20',
+    proposal: 'Analisar novo acordo',
+    status: 'proposal_received',
+    responsible: 'Elisa Anjo',
   };
   let state = mutateOperation({ ...base, scope: 'overdue' }, db, '2026-11-20');
   const onlyOverdue = state.negotiations[0];
   assert.equal(onlyOverdue.installmentIds.length, 2);
   assert.equal(onlyOverdue.balanceAtProposalCents, 75000);
   assert.equal(onlyOverdue.scope, 'overdue');
-  state = mutateOperation({ ...base, scope: 'remaining', proposal: 'Todo contrato' },
-    db, '2026-11-20');
+  state = mutateOperation(
+    { ...base, scope: 'remaining', proposal: 'Todo contrato' },
+    db,
+    '2026-11-20',
+  );
   const all = state.negotiations.find((n) => n.scope === 'remaining');
   assert.equal(all.installmentIds.length, 3);
   assert.equal(all.balanceAtProposalCents, 95000);

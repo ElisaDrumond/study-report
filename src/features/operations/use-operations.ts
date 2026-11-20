@@ -115,9 +115,7 @@ export function useOperations(view: 'central' | 'clients' | 'calendar') {
     [
       'Casos para análise da gestão',
       new Set(
-        active
-          .filter((t) => ['management', 'renegotiate'].includes(t.kind))
-          .map((t) => t.clientId),
+        active.filter((t) => ['management', 'renegotiate'].includes(t.kind)).map((t) => t.clientId),
       ).size,
     ],
     [

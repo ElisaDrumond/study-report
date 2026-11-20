@@ -10,18 +10,27 @@ export function handleNegotiationCommand(type: string, context: OperationContext
     const c = getClient(command.clientId),
       old = state.negotiations.find((n) => n.id === command.id);
     if (old && old.clientId !== c.id) throw Error('Cliente da renegociação não pode mudar');
-    const scope = pick(command.scope ?? old?.scope ?? 'custom',
-      ['overdue', 'remaining', 'custom'] as const, 'Abrangência da renegociação');
-    const installmentIds = scope === 'custom'
-      ? command.installmentIds
-      : negotiationInstallments(state, c.id, scope, today).map((p) => p.id);
-    if (!Array.isArray(installmentIds) || !installmentIds.length ||
-      installmentIds.some((id) => getInstallment(id).clientId !== c.id ||
-        outstandingCents(getInstallment(id)) <= 0))
+    const scope = pick(
+      command.scope ?? old?.scope ?? 'custom',
+      ['overdue', 'remaining', 'custom'] as const,
+      'Abrangência da renegociação',
+    );
+    const installmentIds =
+      scope === 'custom'
+        ? command.installmentIds
+        : negotiationInstallments(state, c.id, scope, today).map((p) => p.id);
+    if (
+      !Array.isArray(installmentIds) ||
+      !installmentIds.length ||
+      installmentIds.some(
+        (id) => getInstallment(id).clientId !== c.id || outstandingCents(getInstallment(id)) <= 0,
+      )
+    )
       throw Error('Não há parcelas elegíveis para a renegociação selecionada');
     const uniqueInstallments = [...new Set(installmentIds)] as string[];
     const balanceAtProposalCents = uniqueInstallments.reduce(
-      (sum, id) => sum + outstandingCents(getInstallment(id)), 0,
+      (sum, id) => sum + outstandingCents(getInstallment(id)),
+      0,
     );
     const status = pick(
       command.status,
@@ -79,8 +88,19 @@ export function handleNegotiationCommand(type: string, context: OperationContext
       action: 'negotiation_' + status,
       category: 'renegotiation',
       status,
-      result: 'Proposta para ' + (scope === 'overdue' ? 'parcelas vencidas' : scope === 'remaining' ? 'todo o saldo contratual restante' : 'parcelas selecionadas') +
-        ', saldo considerado ' + formatCurrency(balanceAtProposalCents) + '. Status: ' + negotiationLabels[status] + '. ' + n.proposal,
+      result:
+        'Proposta para ' +
+        (scope === 'overdue'
+          ? 'parcelas vencidas'
+          : scope === 'remaining'
+            ? 'todo o saldo contratual restante'
+            : 'parcelas selecionadas') +
+        ', saldo considerado ' +
+        formatCurrency(balanceAtProposalCents) +
+        '. Status: ' +
+        negotiationLabels[status] +
+        '. ' +
+        n.proposal,
     });
     audit(database, 'negotiation', n.id, old ?? null, n, 'Decisão registrada por ' + a.responsible);
   } else return false;

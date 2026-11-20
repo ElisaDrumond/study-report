@@ -5,7 +5,13 @@ import {
   previousOrSameBusinessDay,
   shiftDate,
 } from './business-calendar';
-import { daysOverdue, formatCurrency, isOverdue, isUnpaid, outstandingCents } from './collection-status';
+import {
+  daysOverdue,
+  formatCurrency,
+  isOverdue,
+  isUnpaid,
+  outstandingCents,
+} from './collection-status';
 import type { OperationSnapshot, PendingTask } from './collection-types';
 import { isDate } from './rules';
 import { isReportableOperationalActivity } from './operational-activity-scope';
@@ -230,9 +236,10 @@ export function generateCollectionTasks(s: OperationSnapshot, today: string): Pe
       if (collectible.length) {
         const oldest = collectible.reduce((a, b) => (a.dueDate < b.dueDate ? a : b));
         const overdueBalance = overdue.reduce((sum, item) => sum + outstandingCents(item), 0);
-        const debtContext = overdue.length >= 2
-          ? `${overdue.length} parcelas vencidas; saldo vencido consolidado ${formatCurrency(overdueBalance)}. `
-          : '';
+        const debtContext =
+          overdue.length >= 2
+            ? `${overdue.length} parcelas vencidas; saldo vencido consolidado ${formatCurrency(overdueBalance)}. `
+            : '';
         const afterWindow = nextBusinessDay(
           addBusinessDays(nextBusinessDay(oldest.dueDate, e), cfg.followupBusinessDays, e),
           e,
@@ -241,12 +248,11 @@ export function generateCollectionTasks(s: OperationSnapshot, today: string): Pe
         // the operator confirms its initial status, not on the historical due date.
         // Before the first actual contact, the first actionable collection can be today.
         const collectionStart = oldest.collectionStartDate;
-        const freshPortfolio =
-          !!collectionStart && oldest.dueDate < collectionStart;
-        const recentContact = lastContact &&
-          (!collectionStart || lastContact.date >= collectionStart)
-          ? lastContact
-          : undefined;
+        const freshPortfolio = !!collectionStart && oldest.dueDate < collectionStart;
+        const recentContact =
+          lastContact && (!collectionStart || lastContact.date >= collectionStart)
+            ? lastContact
+            : undefined;
         if (freshPortfolio && today >= collectionStart) {
           const due = recentContact
             ? addBusinessDays(recentContact.date, cfg.alternateBusinessDays, e)
@@ -258,22 +264,25 @@ export function generateCollectionTasks(s: OperationSnapshot, today: string): Pe
             recentContact?.id || oldest.id,
             due,
             recentContact
-              ? debtContext + 'Continuar a cobrança a cada ' + cfg.alternateBusinessDays +
-                ' dias úteis após o último contato efetivamente registrado.'
-              : debtContext + 'Contrato antigo conferido: iniciar acompanhamento da dívida em aberto.',
+              ? debtContext +
+                  'Continuar a cobrança a cada ' +
+                  cfg.alternateBusinessDays +
+                  ' dias úteis após o último contato efetivamente registrado.'
+              : debtContext +
+                  'Contrato antigo conferido: iniciar acompanhamento da dívida em aberto.',
             'high',
           );
         } else if (today >= afterWindow) {
-          const base = lastContact && lastContact.date > afterWindow
-            ? lastContact.date
-            : afterWindow;
+          const base =
+            lastContact && lastContact.date > afterWindow ? lastContact.date : afterWindow;
           add(
             client.id,
             oldest.id,
             'alternate',
             lastContact?.id || oldest.id,
             addBusinessDays(base, cfg.alternateBusinessDays, e),
-            debtContext + 'Dias úteis alternados, com base no último contato efetivamente registrado.',
+            debtContext +
+              'Dias úteis alternados, com base no último contato efetivamente registrado.',
           );
         }
       }
@@ -288,7 +297,6 @@ export function generateCollectionTasks(s: OperationSnapshot, today: string): Pe
           getNextCollectionDate(n.requestedDate, e),
           'Proposta depende de decisão registrada da gestão.',
         );
-
     }
     const payments = s.activities.filter(
       (a) =>

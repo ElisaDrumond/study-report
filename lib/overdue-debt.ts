@@ -1,11 +1,7 @@
 import { isOverdue, outstandingCents } from './collection-status';
 import type { Installment, OperationSnapshot } from './collection-types';
 
-export function overdueDebt(
-  installments: Installment[],
-  clientId: string,
-  today: string,
-) {
+export function overdueDebt(installments: Installment[], clientId: string, today: string) {
   const overdue = installments.filter((p) => p.clientId === clientId && isOverdue(p, today));
   return {
     installments: overdue,
