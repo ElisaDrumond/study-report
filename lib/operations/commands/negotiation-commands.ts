@@ -1,4 +1,4 @@
-import { negotiationLabels, outstandingCents } from '../../collection-status';
+import { formatCurrency, negotiationLabels, outstandingCents } from '../../collection-status';
 import { negotiationInstallments } from '../../overdue-debt';
 import { type Negotiation } from '../../collection-types';
 import { audit, put } from '../../database/operations-repository';
@@ -80,7 +80,7 @@ export function handleNegotiationCommand(type: string, context: OperationContext
       category: 'renegotiation',
       status,
       result: 'Proposta para ' + (scope === 'overdue' ? 'parcelas vencidas' : scope === 'remaining' ? 'todo o saldo contratual restante' : 'parcelas selecionadas') +
-        ', saldo considerado US$ ' + (balanceAtProposalCents / 100).toFixed(2) + '. Status: ' + negotiationLabels[status] + '. ' + n.proposal,
+        ', saldo considerado ' + formatCurrency(balanceAtProposalCents) + '. Status: ' + negotiationLabels[status] + '. ' + n.proposal,
     });
     audit(database, 'negotiation', n.id, old ?? null, n, 'Decisão registrada por ' + a.responsible);
   } else return false;

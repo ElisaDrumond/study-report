@@ -1108,15 +1108,15 @@ test('duas parcelas vencidas consolidam o saldo em cobrança e no contato real',
   }));
   const initial = processOperations(db, '2026-11-20');
   const overdue = initial.pending.find((task) => task.kind === 'alternate');
-  assert.match(overdue.reason, /750\.00/);
-  assert.doesNotMatch(overdue.reason, /950\.00/);
+  assert.match(overdue.reason, /750,00/);
+  assert.doesNotMatch(overdue.reason, /950,00/);
   const updated = mutateOperation({
     type: 'record_contact', taskId: overdue.id,
     channel: 'whatsapp', result: 'Cliente avisado do débito total',
     responsible: 'Elisa Anjo',
   }, db, '2026-11-20');
   const contact = updated.activities.find((a) => a.action === 'contact');
-  assert.match(contact.result, /750\.00/);
+  assert.match(contact.result, /750,00/);
   assert.match(contact.result, /Cliente avisado/);
   db.close();
 });

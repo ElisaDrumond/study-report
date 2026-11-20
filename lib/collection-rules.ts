@@ -5,11 +5,11 @@ import {
   previousOrSameBusinessDay,
   shiftDate,
 } from './business-calendar';
-import { daysOverdue, isOverdue, isUnpaid } from './collection-status';
+import { daysOverdue, formatCurrency, isOverdue, isUnpaid, outstandingCents } from './collection-status';
 import type { OperationSnapshot, PendingTask } from './collection-types';
 import { isDate } from './rules';
 import { isReportableOperationalActivity } from './operational-activity-scope';
-import { outstandingCents } from './collection-status';
+
 export const taskLabels: Record<string, string> = {
   advance: 'Enviar e-mail e WhatsApp com link de pagamento',
   due: 'Lembrar vencimento por WhatsApp',
@@ -222,7 +222,7 @@ export function generateCollectionTasks(s: OperationSnapshot, today: string): Pe
               ),
               e,
             ),
-            `${overdue.length} parcelas vencidas; saldo vencido consolidado US$ ${(overdue.reduce((total, item) => total + outstandingCents(item), 0) / 100).toFixed(2)}; atraso mais antigo: ${daysOverdue(oldest, today)} dias. A proposta pode incluir só vencidas ou todo o saldo contratual restante. Novas condições exigem aprovação.`,
+            `${overdue.length} parcelas vencidas; saldo vencido consolidado ${formatCurrency(overdue.reduce((total, item) => total + outstandingCents(item), 0))}; atraso mais antigo: ${daysOverdue(oldest, today)} dias. A proposta pode incluir só vencidas ou todo o saldo contratual restante. Novas condições exigem aprovação.`,
             'high',
           );
       }
@@ -231,7 +231,7 @@ export function generateCollectionTasks(s: OperationSnapshot, today: string): Pe
         const oldest = collectible.reduce((a, b) => (a.dueDate < b.dueDate ? a : b));
         const overdueBalance = overdue.reduce((sum, item) => sum + outstandingCents(item), 0);
         const debtContext = overdue.length >= 2
-          ? `${overdue.length} parcelas vencidas; saldo vencido consolidado US$ ${(overdueBalance / 100).toFixed(2)}. `
+          ? `${overdue.length} parcelas vencidas; saldo vencido consolidado ${formatCurrency(overdueBalance)}. `
           : '';
         const afterWindow = nextBusinessDay(
           addBusinessDays(nextBusinessDay(oldest.dueDate, e), cfg.followupBusinessDays, e),

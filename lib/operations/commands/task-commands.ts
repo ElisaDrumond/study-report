@@ -1,5 +1,5 @@
 import { getNextCollectionDate, shiftDate } from '../../business-calendar';
-import { daysOverdue, isOverdue, outstandingCents } from '../../collection-status';
+import { daysOverdue, formatCurrency, isOverdue, outstandingCents } from '../../collection-status';
 import { audit, put } from '../../database/operations-repository';
 import { date, money, pick, text } from '../../validation/operation-values';
 import type { OperationContext } from '../operation-context';
@@ -64,7 +64,7 @@ export function handleTaskCommand(type: string, context: OperationContext) {
       const a = activity({
         clientId: c.id,
         action: 'external_collection',
-        result: `Encaminhamento externo confirmado manualmente. ${overdue.length} parcelas vencidas, saldo US$ ${(balance / 100).toFixed(2)}.`,
+        result: `Encaminhamento externo confirmado manualmente. ${overdue.length} parcelas vencidas, saldo ${formatCurrency(balance)}.`,
       });
       const next = { ...c, financialStatus: 'external' as const };
       put(database, 'op_clients', next);
@@ -180,7 +180,7 @@ export function handleTaskCommand(type: string, context: OperationContext) {
         ? state.installments.filter((item) => item.clientId === c.id && isOverdue(item, today))
         : [];
       const consolidated = overdue.length >= 2
-        ? `${overdue.length} parcelas vencidas; saldo vencido US$ ${(overdue.reduce((sum, item) => sum + outstandingCents(item), 0) / 100).toFixed(2)}. `
+        ? `${overdue.length} parcelas vencidas; saldo vencido ${formatCurrency(overdue.reduce((sum, item) => sum + outstandingCents(item), 0))}. `
         : '';
       const a = activity({
         clientId: c.id,
