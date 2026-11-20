@@ -1,16 +1,18 @@
 {
   "name": "study-work-report-local",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev --hostname 127.0.0.1",
     "build": "next build",
-    "start": "next start --hostname 127.0.0.1"
+    "start": "next start --hostname 127.0.0.1",
+    "test": "tsc -p tsconfig.tests.json && node --test tests/*.cjs"
   },
   "dependencies": {
     "better-sqlite3": "^12.0.0",
     "lucide-react": "^0.468.0",
     "next": "^15.5.0",
+    "openai": "^7.62.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

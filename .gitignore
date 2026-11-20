@@ -1,6 +1,9 @@
 node_modules/
 .next/
+.next-production/
 .env*
 !.env.example
 data/*.db*
 *.log
+.test-build/
+*.tsbuildinfo

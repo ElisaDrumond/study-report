@@ -40,7 +40,7 @@ export function validateEntry(r:Entry):string[]{const errors:string[]=[];
   if(r.status==='payment_scheduled'&&!r.scheduled)errors.push('Data do pagamento agendado obrigatória');
   return errors;
 }
-const unique=(rows:Entry[])=>new Set(rows.map(r=>r.name.trim().toLocaleLowerCase('pt-BR'))).size;
+const unique=(rows:Entry[])=>new Set(rows.map(r=>r.clientId||'name:'+r.name.trim().toLocaleLowerCase('pt-BR'))).size;
 const bullet=(items:string[])=>items.map(s=>`- ${s}`).join('\n');
 export function buildReport(date:string,entries:Entry[],tasks:Task[],extra='',nextSteps=''){
  const valid=entries.filter(r=>validateEntry(r).length===0),excluded=entries.length-valid.length;

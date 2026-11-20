@@ -1,58 +1,59 @@
-# Study & Work — Report Financeiro Local (Next.js v1)
+# Study & Work Reports v2.0
 
-Primeira versão do dashboard financeiro local, com a interface Aurora + Glassmorphism, banco SQLite, registro de atividades, demandas da daily, relatórios padrão e histórico das versões salvas.
+Central operacional local em Next.js, TypeScript e SQLite, com integração opcional OpenAI. Preserva atividades, demandas, relatórios e histórico existentes.
 
-## Requisitos
+## Central Operacional v2.0
 
-- Windows 10 ou 11 (também funciona em macOS/Linux)
-- Node.js **22 LTS** instalado: https://nodejs.org/
-- Conexão à internet **uma vez** para baixar as dependências do npm. Depois, as funções desta v1 são locais.
+Comece em **Clientes e parcelas**: cadastre clientes ou importe explicitamente os nomes do histórico e registre os valores e vencimentos das parcelas. O sistema não infere contratos ou valores de textos antigos. A central gera automaticamente uma fila filtrável com próximas ações, conferências de pagamentos, renegociações e tarefas vencidas.
 
-## Iniciar no Windows
+O **Calendário Operacional** permite exceções úteis/não úteis, recessos e configuração da régua. O padrão é segunda a sexta úteis, no fuso `America/Sao_Paulo`, sem feriados presumidos. Alterações recalculam tarefas abertas e preservam conclusões e histórico de reagendamentos.
 
-1. Descompacte este ZIP numa pasta sua **autorizada para dados corporativos** (por exemplo, um diretório aprovado pela TI). Não use pasta pública ou compartilhada sem autorização.
-2. Abra um terminal (PowerShell) **dentro da pasta `study-report-next`**.
-3. Execute:
+Nenhuma comunicação, alteração de atendimento ou cobrança externa é executada automaticamente. Pagamentos são confirmados por parcela, aceitam valores parciais e geram registros de conciliação. Aprovações e encaminhamentos exigem confirmação humana.
 
-   ```powershell
-   npm install
-   npm run dev
-   ```
+Consulte o [guia operacional completo](docs/operations-v2.md) para os prazos, estados, critérios de suspensão, migração e limitações.
 
-4. Acesse no navegador: **http://localhost:3000**.
-5. Para encerrar o servidor, pressione `Ctrl + C` no terminal.
+## Windows
 
-> Caso o Windows peça compiladores para `better-sqlite3`, confirme que está no Node.js 22 LTS e use `npm install` novamente. O pacote possui binários pré-compilados em plataformas suportadas, mas pode exigir ferramentas de compilação dependendo do ambiente.
+Requer Node.js 22 LTS. Execute no PowerShell, na pasta do projeto:
 
-## Onde ficam os dados?
+```powershell
+npm.cmd install
+Copy-Item .env.example .env.local
+npm.cmd run dev
+```
 
-Em `data/report.db`, criada automaticamente no primeiro acesso. **Faça backup desta pasta**, preferencialmente enquanto o servidor estiver fechado (o SQLite pode criar também arquivos `-wal` e `-shm` temporários). O botão "Backup JSON" exporta os registros e tarefas para uso complementar.
+Abra http://127.0.0.1:3000. Encerre com Ctrl+C. Para produção local:
 
-- A aplicação escuta somente em `127.0.0.1` (não fica disponível para computadores da rede).
-- **Não existe autenticação nesta v1**; proteja o usuário do Windows e o diretório de dados. Não publique este servidor, não redirecione portas e não o exponha à internet.
-- A geração padrão de reports **não** envia informações para serviços externos.
-- A integração com OpenAI **não está ativa** nesta v1. A chave `.env.example` é só um marcador para a próxima fase.
-- O banco serve para organização local e **não substitui o CRM oficial da empresa**.
+```powershell
+npm.cmd test
+npm.cmd run build
+npm.cmd start
+```
 
-## Recursos
+## OpenAI opcional
 
-- Cadastro/edição/exclusão de registros financeiros
-- Categorias com ações/status válidos por contexto
-- Atrasos separados em até 30 dias e mais de 30 dias
-- Demandas da daily por data
-- Indicadores de ações, clientes únicos e pendências
-- Geração de e-mail formal, prévia editável, cópia e armazenamento das versões geradas
-- Importação de backups JSON do dashboard HTML anterior (registros válidos)
-- Cópia do dashboard HTML original para consulta: `public/dashboard-legado.html`
+Edite `.env.local`, defina `OPENAI_API_KEY` com sua chave da plataforma OpenAI e `OPENAI_MODEL=gpt-4.1-mini` (ou outro modelo com Structured Outputs). Sua conta precisa de acesso ao modelo e créditos. Reinicie o servidor. Nunca use NEXT_PUBLIC_ para credenciais. Sem chave, as funções tradicionais continuam disponíveis.
 
-## Limitações da v1
+Gere o report padrão, escolha Formal (padrão), Executivo ou Detalhado e clique em Refinar com IA. Compare as versões editáveis e escolha qual copiar ou salvar. Nenhum e-mail é enviado automaticamente.
 
-- Relatórios baseados em modelos fixos, sem refino com IA.
-- A importação JSON do HTML anterior recupera **registros válidos**; demandas antigas, textos livres e histórico do HTML não são importados automaticamente.
-- A geração atual considera as atividades da data escolhida e a carteira de acompanhamento do banco, não apenas os clientes contatados naquele dia.
-- O backup JSON via interface exporta os registros e demandas; restaure reports já salvos copiando também `data/report.db` com o servidor fechado.
-- Esta entrega foi preparada sem acesso ao registro npm neste ambiente. A instalação e o funcionamento final devem ser testados no seu computador após `npm install`.
+## Integridade e privacidade
 
-## Próxima etapa (v1.1)
+A rota `/api/reports/refine` reconstrói o relatório a partir do SQLite no servidor. Usa SDK oficial, API Responses, JSON Schema estrito, store:false, timeout de 30 segundos e sem tentativas automáticas adicionais. Respostas inválidas, incompletas, recusadas ou com seções ausentes/duplicadas são rejeitadas. A aplicação não registra prompts ou dados de clientes nos logs. A rota restringe a origem local e refinamentos simultâneos.
 
-Adicionar botão opcional “Refinar com IA” no backend, após revisão do formato dos dados enviados; nunca expor uma chave de API no navegador. Nenhum e-mail será enviado automaticamente.
+O refinamento é deliberadamente conservador: a IA recebe apenas títulos fixos e identificadores temporários de seções. Escolhe uma abertura previamente aprovada e a ordem das seções. O servidor insere integralmente os blocos originais com nomes, datas, valores, status, observações e indicadores. Os estilos orientam o plano editorial sem excluir detalhes. Não há reescrita livre nem correção gramatical das observações financeiras; isso exigiria validação semântica adicional. Edições manuais ficam sob revisão do usuário e não são enviadas à IA.
+
+Referência: [documentação oficial de Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs).
+
+## Banco e histórico
+
+Dados em `data/report.db`. Migração transacional e idempotente adiciona originalBody, refinedBody, refinementStyle e refinedAt sem apagar relatórios existentes. body mantém a versão escolhida; originalBody preserva o texto gerado. createdAt registra o salvamento e refinedAt a geração refinada. Cada salvamento cria uma nova linha.
+
+Faça backup da pasta data com o servidor fechado, considerando arquivos WAL/SHM. O backup JSON exporta registros, demandas e histórico; a importação existente recupera apenas registros válidos. Restaure o banco para recuperação integral. A aplicação escuta em 127.0.0.1 e não possui autenticação; proteja a conta Windows e o diretório. Não exponha o servidor à internet. O banco não substitui o CRM oficial.
+
+## Testes e limitações
+
+npm.cmd test utiliza OpenAI simulada e SQLite em memória. A suíte inclui os cenários operacionais da v2, preservação dos dados e relatórios antigos e todos os testes anteriores de refinamento. Consulte a descrição dos cenários no guia operacional.
+
+Validação desta entrega: 33 testes aprovados, TypeScript e build de produção aprovados. A verificação HTTP e no Chrome validou migração/backup, preservação de relatório antigo, calendário, fila, pagamentos parciais/totais, formulários de cliente/parcela/pagamento/exceção e visualização de celular, usando banco fictício isolado. Nenhum dado de teste foi inserido no banco real.
+
+Não são feitas chamadas pagas nos testes. A chamada autenticada e a qualidade editorial do modelo real dependem da chave configurada pelo usuário e não foram verificadas nesta entrega.
