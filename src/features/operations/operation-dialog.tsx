@@ -40,6 +40,7 @@ export default function OperationDialog({
   error,
 }: Props) {
   if (!activeDialog) return null;
+  const paymentTerms = activeDialog.client?.paymentTerms;
   return (
     <div className={styles.modalBackdrop}>
       <div className={styles.modal} role="dialog" aria-modal="true" aria-label={activeDialog.title}>
@@ -157,11 +158,11 @@ export default function OperationDialog({
                   </Field>
                 </>
               )}
-              {activeDialog.type === 'generate_installments' && activeDialog.client?.paymentTerms && (
+              {activeDialog.type === 'generate_installments' && paymentTerms && (
                 <>
                   {(() => {
                     try {
-                      const preview = buildInstallmentPlan(activeDialog.client.paymentTerms!);
+                      const preview = buildInstallmentPlan(paymentTerms);
                       return (
                         <div className={`${styles.note} ${styles.wide}`}>
                           <strong>{preview.length} parcelas · Total {money(
@@ -182,7 +183,7 @@ export default function OperationDialog({
                     <input
                       name="reference"
                       required
-                      defaultValue={activeDialog.client.crmRef || activeDialog.client.paymentTerms.purchaseDescription}
+                      defaultValue={activeDialog.client?.crmRef || paymentTerms.purchaseDescription}
                     />
                   </Field>
                 </>

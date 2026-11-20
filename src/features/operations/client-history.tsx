@@ -146,11 +146,6 @@ export default function ClientHistory({
                 <button
                   className={styles.primary}
                   onClick={() => {
-                    const reference = client.crmRef || client.paymentTerms?.purchaseDescription;
-                    if (!reference) {
-                      window.alert('Informe a referência CRM ou a descrição da compra.');
-                      return;
-                    }
                     openClient('generate_installments', 'Revisar e gerar parcelas', client);
                   }}
                 >
