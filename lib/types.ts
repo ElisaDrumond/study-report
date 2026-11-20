@@ -38,6 +38,7 @@ export type Entry = {
   clientId?: string;
   installmentId?: string;
   source?: 'operational';
+  operationalLabel?: string;
   name: string;
   category: Category;
   action: Action;

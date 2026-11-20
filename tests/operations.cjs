@@ -211,11 +211,31 @@ test('atividade operacional aparece na lista sem duplicar o relatório', () => {
   assert.equal(entries[0].clientId, 'c');
   assert.equal(entries[0].installmentId, 'p');
   assert.equal(entries[0].action, 'whatsapp_sent');
+  assert.equal(entries[0].operationalLabel, 'Contato registrado');
   const result = buildOperationalReport('2026-11-20', {
     ...stateWithActivity,
     today: '2026-11-20',
   }, [], [], '', '');
   assert.equal(result.dailyActions, 1);
+});
+
+test('histórico do trabalho usa rótulos específicos para pagamentos e verificações', () => {
+  const { operationalActivityEntries } = require('../.test-build/operational-reports');
+  const sample = (action, status, id) => ({
+    id, clientId: 'c', installmentId: 'p',
+    action, status, category: 'verification',
+    occurredAt: '2026-11-20T14:00:00.000Z', date: '2026-11-20',
+    channel: 'system', result: 'Conferência manual',
+    notes: '', responsible: 'Elisa Anjo', contact: false, taskId: '', amountCents: 0,
+  });
+  const rows = operationalActivityEntries(state({ activities: [
+    sample('payment_status_checked', 'recorded', 'v'),
+    sample('payment_confirmed', 'partial', 'p'),
+  ] }));
+  assert.equal(rows[0].operationalLabel, 'Situação financeira verificada');
+  assert.equal(rows[0].status, 'closed');
+  assert.equal(rows[1].operationalLabel, 'Pagamento parcial registrado');
+  assert.notEqual(rows[0].operationalLabel, rows[1].operationalLabel);
 });
 
 test('calendário: sexta-feira, feriado segunda, recesso e sábado útil', () => {

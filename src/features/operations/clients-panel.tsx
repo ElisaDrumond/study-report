@@ -19,7 +19,7 @@ type Props = Pick<
   | 'openClient'
   | 'setHistoryClient'
   | 'today'
->;
+> & { onNavigate: (destination: 'central' | 'activities') => void };
 export default function ClientsPanel({
   busy,
   run,
@@ -31,6 +31,7 @@ export default function ClientsPanel({
   openClient,
   setHistoryClient,
   today,
+  onNavigate,
 }: Props) {
   const downloadClients = () => {
     const csv = exportClientsCsv(operationsState.clients, operationsState.installments);
@@ -105,6 +106,16 @@ export default function ClientsPanel({
               <Plus size={16} /> Novo cliente
             </button>
           </div>
+        </div>
+        <div className={op.workflow}>
+          <div><b>1. Cadastrar</b><small>Cliente e contrato em USD</small></div>
+          <div><b>2. Preparar parcelas</b><small>Gerar e verificar a situação real</small></div>
+          <div><b>3. Acompanhar</b><small>Tarefas sugeridas na Central</small></div>
+          <div><b>4. Registrar trabalho</b><small>Atividades e relatório do dia</small></div>
+        </div>
+        <div className={op.actions}>
+          <button className={styles.secondary} onClick={() => onNavigate('central')}>Ir para Central Operacional</button>
+          <button className={styles.secondary} onClick={() => onNavigate('activities')}>Consultar atividades realizadas</button>
         </div>
         <Field label="Selecionar cliente">
           <select

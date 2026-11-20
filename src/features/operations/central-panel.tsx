@@ -1,5 +1,5 @@
 'use client';
-import { History, RefreshCw } from 'lucide-react';
+import { CircleCheck, History, RefreshCw } from 'lucide-react';
 import op from '../../../app/operations.module.css';
 import styles from '../../../app/page.module.css';
 import { taskLabels } from '../../../lib/collection-rules';
@@ -186,12 +186,12 @@ export default function CentralPanel({
                   )}
                   {task.installmentId && (
                     <button
-                      className={styles.secondary}
+                      className={op.actionPayment}
                       onClick={() =>
-                        openTask('confirm_payment', task, 'Confirmar pagamento da parcela')
+                        openTask('confirm_payment', task, 'Registrar pagamento identificado')
                       }
                     >
-                      Confirmar pagamento
+                      <CircleCheck size={16} /> Registrar pagamento
                     </button>
                   )}
                   {task.kind.startsWith('scheduled') ? (

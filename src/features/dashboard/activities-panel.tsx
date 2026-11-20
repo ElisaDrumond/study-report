@@ -48,7 +48,7 @@ export default function ActivitiesPanel({
         <div>
           <p className={styles.eyebrow}>CADASTRO</p>
           <h2>Histórico de atividades</h2>
-          <p className={styles.subhead}>Cada linha representa uma ação ou um acompanhamento.</p>
+          <p className={styles.subhead}>Ações reais da Central aparecem aqui automaticamente. Sugestões de tarefas não são atividades realizadas.</p>
         </div>
         <button className={styles.primary} onClick={() => setEditing(freshEntry(date))}>
           <Plus size={17} /> Novo registro
@@ -128,7 +128,7 @@ export default function ActivitiesPanel({
                   {validateEntry(r).length > 0 && <span className={styles.invalid}>Revisar</span>}
                 </td>
                 <td>{categories[r.category]}{r.source === 'operational' && <small> · Central Operacional</small>}</td>
-                <td>{actions[r.action]}</td>
+                <td>{r.source === 'operational' ? r.operationalLabel || actions[r.action] : actions[r.action]}</td>
                 <td>
                   <span className={styles.statusPill}>{statuses[r.status]}</span>
                 </td>

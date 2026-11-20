@@ -120,7 +120,13 @@ export default function Dashboard() {
           <div className={styles.card}>Carregando registros locais...</div>
         ) : (
           <>
-            {isOperationsView && <Operations key={tab} view={tab} />}
+            {isOperationsView && (
+              <Operations
+                key={tab}
+                view={tab}
+                onNavigate={(destination) => setTab(destination)}
+              />
+            )}
 
             {tab === 'overview' && (
               <OverviewPanel

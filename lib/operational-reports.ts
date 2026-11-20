@@ -4,6 +4,7 @@ import { getEntries, getTasks } from './db';
 import { processOperations } from './operations-store';
 import { buildReport, fmt } from './rules';
 import type { Action, Entry, Status, Task } from './types';
+import { operationalActionLabel } from './operational-action-labels';
 export function operationalActivityEntries(state: OperationSnapshot): Entry[] {
   const names = new Map(state.clients.map((client) => [client.id, client.name]));
   return state.activities
@@ -17,6 +18,15 @@ export function operationalActivityEntries(state: OperationSnapshot): Entry[] {
         category = 'payment';
         action = 'payment_checked';
         status = a.status === 'paid' ? 'payment_confirmed' : 'closed';
+      } else if (a.action === 'payment_scheduled') {
+        status = 'payment_scheduled';
+      } else if (a.action === 'payment_status_checked' ||
+        a.action === 'task_deferred' ||
+        a.action === 'service_blocked' ||
+        a.action === 'service_unblocked') {
+        status = 'closed';
+      } else if (a.action === 'external_collection') {
+        status = 'external_collection';
       } else if (a.contact) {
         category = 'current';
         action = (
@@ -49,6 +59,7 @@ export function operationalActivityEntries(state: OperationSnapshot): Entry[] {
         clientId: a.clientId,
         installmentId: a.installmentId,
         source: 'operational' as const,
+        operationalLabel: operationalActionLabel(a),
         name: names.get(a.clientId) || 'Cliente arquivado',
         category,
         action,
@@ -59,6 +70,7 @@ export function operationalActivityEntries(state: OperationSnapshot): Entry[] {
         scheduled: '',
         notes: [
           p ? `${p.reference}, parcela ${p.number}.` : '',
+          a.contact ? '' : operationalActionLabel(a) + '.',
           a.result,
           a.notes,
           `Responsável: ${a.responsible}.`,

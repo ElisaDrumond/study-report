@@ -99,11 +99,12 @@ export function useDashboard() {
   useEffect(() => {
     if (tab !== 'activities') return;
     let active = true;
-    route('operations')
-      .then((operations) => {
+    Promise.all([route('operations'), route('records')])
+      .then(([operations, latestRecords]) => {
         if (active) {
           setClients(operations.clients);
           setInstallments(operations.installments);
+          setRecords(latestRecords);
         }
       })
       .catch((error) => {

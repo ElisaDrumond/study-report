@@ -1,5 +1,5 @@
 'use client';
-import { X } from 'lucide-react';
+import { CalendarClock, CircleCheck, ClipboardCheck, Pencil, X } from 'lucide-react';
 import op from '../../../app/operations.module.css';
 import styles from '../../../app/page.module.css';
 import { calendarDaysBetween } from '../../../lib/business-calendar';
@@ -233,32 +233,35 @@ export default function ClientHistory({
                 <td>
                   <div className={op.actions}>
                     {p.verificationStatus === 'unverified' && p.status !== 'cancelled' && (
-                      <button className={styles.secondary} onClick={() => openClient('verify_installment', 'Verificar situação da parcela', client, p)}>
-                        Confirmar que segue em aberto
+                      <button
+                        className={op.actionReview}
+                        onClick={() => openClient('verify_installment', 'Verificar situação da parcela', client, p)}
+                      >
+                        <ClipboardCheck size={16} /> Verificar situação
                       </button>
                     )}
                     <button
-                      className={styles.secondary}
+                      className={op.actionNeutral}
                       disabled={p.status === 'paid'}
                       onClick={() => openClient('save_installment', 'Editar parcela', client, p)}
                     >
-                      Editar
+                      <Pencil size={16} /> Editar parcela
                     </button>
                     <button
-                      className={styles.secondary}
+                      className={op.actionPayment}
                       disabled={p.status === 'paid' || p.status === 'cancelled'}
                       onClick={() =>
-                        openClient('confirm_payment', 'Confirmar pagamento da parcela', client, p)
+                        openClient('confirm_payment', 'Registrar pagamento identificado', client, p)
                       }
                     >
-                      Confirmar pagamento
+                      <CircleCheck size={16} /> Registrar pagamento
                     </button>
                     <button
-                      className={styles.secondary}
+                      className={op.actionSchedule}
                       disabled={p.status === 'paid' || p.status === 'cancelled'}
-                      onClick={() => openClient('schedule_payment', 'Agendar pagamento', client, p)}
+                      onClick={() => openClient('schedule_payment', 'Registrar previsão de pagamento', client, p)}
                     >
-                      Agendar
+                      <CalendarClock size={16} /> Previsão de pagamento
                     </button>
                   </div>
                 </td>

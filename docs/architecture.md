@@ -102,6 +102,24 @@ cents, displayed as US$ and exported as USD. This is a currency-label correction
 **not** an exchange-rate conversion. Reconciliation is solely a separately recorded
 task in Study's official system and is never inferred from payment-status verification.
 
+## Navigation, semantic actions and report continuity
+
+Clients/Contracts → Confirmed installments → Central Operational actions → Activities → Report
+is one guided workflow. Each page now links to the next and previous stage.
+Entering Activities refreshes both the operational activity projection and
+client/parcel lookups, preventing stale daily rows after a Central action.
+
+Operational activity rows are read-only and preserve the source activity ID;
+they display their actual operational action label rather than a generic
+"Outra ação". Reports consume the operational activity ledger directly once,
+not the merged UI listing, so no double counting occurs. Suggested tasks,
+imports, contract creation and rule recalculations are not counted as worked
+activities. Actual completed actions remain credited on the operation date.
+
+Financial buttons use semantic colors and explicit verbs: amber for verification,
+green for **recording** confirmed payment, blue for payment prediction, and
+neutral gray for editing. Their text labels remain accessible without color.
+
 ## Existing contracts to protect
 
 - Preserve the SQLite schema and the migration/backup behavior.
