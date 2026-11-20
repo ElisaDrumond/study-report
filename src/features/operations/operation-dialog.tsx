@@ -168,18 +168,31 @@ export default function OperationDialog({
                       const preview = buildInstallmentPlan(paymentTerms);
                       return (
                         <div className={`${styles.note} ${styles.wide}`}>
-                          <strong>{preview.length} parcelas · Total {money(
-                            preview.reduce((sum, installment) => sum + installment.amountCents, 0),
-                          )}</strong>
+                          <strong>
+                            {preview.length} parcelas · Total{' '}
+                            {money(
+                              preview.reduce(
+                                (sum, installment) => sum + installment.amountCents,
+                                0,
+                              ),
+                            )}
+                          </strong>
                           <p>
-                            Primeiro vencimento: {preview[0].dueDate} · Último vencimento:
-                            {' '}{preview[preview.length - 1].dueDate}
+                            Primeiro vencimento: {preview[0].dueDate} · Último vencimento:{' '}
+                            {preview[preview.length - 1].dueDate}
                           </p>
-                          <p>Confira os valores e datas antes de confirmar. Nada será enviado automaticamente.</p>
+                          <p>
+                            Confira os valores e datas antes de confirmar. Nada será enviado
+                            automaticamente.
+                          </p>
                         </div>
                       );
                     } catch (error) {
-                      return <p className={styles.alert}>{error instanceof Error ? error.message : 'Contrato incompleto'}</p>;
+                      return (
+                        <p className={styles.alert}>
+                          {error instanceof Error ? error.message : 'Contrato incompleto'}
+                        </p>
+                      );
                     }
                   })()}
                   <Field label="Identificador do contrato" wide>
@@ -191,7 +204,14 @@ export default function OperationDialog({
                   </Field>
                   {(() => {
                     try {
-                      return <div className={styles.wide}><HistoricalPaymentsFields plan={buildInstallmentPlan(paymentTerms)} today={today} /></div>;
+                      return (
+                        <div className={styles.wide}>
+                          <HistoricalPaymentsFields
+                            plan={buildInstallmentPlan(paymentTerms)}
+                            today={today}
+                          />
+                        </div>
+                      );
                     } catch {
                       return null;
                     }
@@ -274,8 +294,8 @@ export default function OperationDialog({
               {activeDialog.type === 'verify_installment' && (
                 <div className={`${styles.note} ${styles.wide}`}>
                   Confirme apenas após conferir no sistema financeiro da Study que esta parcela
-                  permanece em aberto. Isso NÃO é a tarefa de conciliação da Study e não confirma pagamento.
-                  Se já foi paga, use a ação Confirmar pagamento da parcela.
+                  permanece em aberto. Isso NÃO é a tarefa de conciliação da Study e não confirma
+                  pagamento. Se já foi paga, use a ação Confirmar pagamento da parcela.
                 </div>
               )}
               {activeDialog.type === 'confirm_payment' && (
@@ -524,12 +544,9 @@ export default function OperationDialog({
                   <textarea name="result" required />
                 </Field>
               )}
-              {![
-                'save_client',
-                'save_installment',
-                'save_calendar',
-                'save_settings',
-              ].includes(activeDialog.type) && (
+              {!['save_client', 'save_installment', 'save_calendar', 'save_settings'].includes(
+                activeDialog.type,
+              ) && (
                 <>
                   <Field label="Responsável pelo registro" wide>
                     <select name="responsible" required defaultValue="Elisa Anjo">
@@ -546,9 +563,14 @@ export default function OperationDialog({
                   >
                     <textarea name="notes" required={activeDialog.type === 'external'} />
                   </Field>
-                  {['generate_installments', 'confirm_payment', 'verify_installment', 'service', 'external', 'save_negotiation'].includes(
-                    activeDialog.type,
-                  ) && (
+                  {[
+                    'generate_installments',
+                    'confirm_payment',
+                    'verify_installment',
+                    'service',
+                    'external',
+                    'save_negotiation',
+                  ].includes(activeDialog.type) && (
                     <label className={`${op.checkbox} ${styles.wide}`}>
                       <input type="checkbox" name="confirmed" required /> Confirmo que a ação ou
                       autorização foi verificada manualmente. Nenhuma comunicação será enviada pelo

@@ -8,7 +8,9 @@ import { cleanEntry, validateEntry } from '../../../lib/rules';
 export const runtime = 'nodejs';
 export async function GET() {
   const operational = operationalActivityEntries(snapshot(db()));
-  return NextResponse.json([...getEntries(), ...operational].sort((a, b) => b.date.localeCompare(a.date)));
+  return NextResponse.json(
+    [...getEntries(), ...operational].sort((a, b) => b.date.localeCompare(a.date)),
+  );
 }
 export async function POST(request: Request) {
   try {

@@ -53,7 +53,7 @@ export function validateHistoricalPayments(
     ) {
       throw Error(
         `Parcela ${number}: o valor recebido deve corresponder ao valor original + encargos informados. ` +
-        'Pagamentos parciais, descontos ou outros ajustes precisam de registro específico.',
+          'Pagamentos parciais, descontos ou outros ajustes precisam de registro específico.',
       );
     }
     result.set(number as number, {

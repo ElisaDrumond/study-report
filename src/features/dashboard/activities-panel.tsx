@@ -48,7 +48,10 @@ export default function ActivitiesPanel({
         <div>
           <p className={styles.eyebrow}>CADASTRO</p>
           <h2>Histórico de atividades</h2>
-          <p className={styles.subhead}>Ações reais da Central aparecem aqui automaticamente. Sugestões de tarefas não são atividades realizadas.</p>
+          <p className={styles.subhead}>
+            Ações reais da Central aparecem aqui automaticamente. Sugestões de tarefas não são
+            atividades realizadas.
+          </p>
         </div>
         <button className={styles.primary} onClick={() => setEditing(freshEntry(date))}>
           <Plus size={17} /> Novo registro
@@ -76,7 +79,10 @@ export default function ActivitiesPanel({
         </label>
         <label className={styles.filter}>
           Período
-          <select value={dateFilter} onChange={(event) => setDateFilter(event.target.value as 'all' | 'selected' | 'range')}>
+          <select
+            value={dateFilter}
+            onChange={(event) => setDateFilter(event.target.value as 'all' | 'selected' | 'range')}
+          >
             <option value="all">Todas as datas</option>
             <option value="selected">Data selecionada</option>
             <option value="range">Intervalo</option>
@@ -84,11 +90,23 @@ export default function ActivitiesPanel({
         </label>
         {dateFilter === 'range' && (
           <>
-            <label className={styles.filter}>De
-              <input type="date" value={fromDate} max={toDate || undefined} onChange={(event) => setFromDate(event.target.value)} />
+            <label className={styles.filter}>
+              De
+              <input
+                type="date"
+                value={fromDate}
+                max={toDate || undefined}
+                onChange={(event) => setFromDate(event.target.value)}
+              />
             </label>
-            <label className={styles.filter}>Até
-              <input type="date" value={toDate} min={fromDate || undefined} onChange={(event) => setToDate(event.target.value)} />
+            <label className={styles.filter}>
+              Até
+              <input
+                type="date"
+                value={toDate}
+                min={fromDate || undefined}
+                onChange={(event) => setToDate(event.target.value)}
+              />
             </label>
           </>
         )}
@@ -127,8 +145,15 @@ export default function ActivitiesPanel({
                   <strong>{r.name}</strong>
                   {validateEntry(r).length > 0 && <span className={styles.invalid}>Revisar</span>}
                 </td>
-                <td>{categories[r.category]}{r.source === 'operational' && <small> · Central Operacional</small>}</td>
-                <td>{r.source === 'operational' ? r.operationalLabel || actions[r.action] : actions[r.action]}</td>
+                <td>
+                  {categories[r.category]}
+                  {r.source === 'operational' && <small> · Central Operacional</small>}
+                </td>
+                <td>
+                  {r.source === 'operational'
+                    ? r.operationalLabel || actions[r.action]
+                    : actions[r.action]}
+                </td>
                 <td>
                   <span className={styles.statusPill}>{statuses[r.status]}</span>
                 </td>
@@ -136,11 +161,17 @@ export default function ActivitiesPanel({
                 <td className={styles.tableactions}>
                   {r.source !== 'operational' ? (
                     <>
-                      <button onClick={() => setEditing({ ...r })} aria-label={`Editar ${r.name}`}>Editar</button>
-                      <button onClick={() => removeRecord(r.id)} aria-label={`Excluir ${r.name}`}><Trash2 size={16} /></button>
+                      <button onClick={() => setEditing({ ...r })} aria-label={`Editar ${r.name}`}>
+                        Editar
+                      </button>
+                      <button onClick={() => removeRecord(r.id)} aria-label={`Excluir ${r.name}`}>
+                        <Trash2 size={16} />
+                      </button>
                     </>
                   ) : (
-                    <span title="Atividade registrada na Central Operacional. Consulte o histórico do cliente.">Histórico operacional</span>
+                    <span title="Atividade registrada na Central Operacional. Consulte o histórico do cliente.">
+                      Histórico operacional
+                    </span>
                   )}
                 </td>
               </tr>

@@ -146,35 +146,65 @@ test('migração de vínculo com clientes não apaga atividades legadas e é ide
 });
 
 test('parcelas importadas não disparam cobrança antes da verificação inicial', () => {
-  const database = memory(state({
-    installments: [installment({
-      dueDate: '2026-08-18',
-      verificationStatus: 'unverified',
-    })],
-  }));
+  const database = memory(
+    state({
+      installments: [
+        installment({
+          dueDate: '2026-08-18',
+          verificationStatus: 'unverified',
+        }),
+      ],
+    }),
+  );
   let current = processOperations(database, '2026-11-20');
   assert.equal(current.clients[0].financialStatus, 'verification_pending');
   assert.equal(current.clients[0].serviceStatus, 'active');
-  assert.equal(current.pending.filter((task) => ['advance', 'initial', 'block', 'fine'].includes(task.kind)).length, 0);
-  assert.throws(() => mutateOperation({
-    type: 'verify_installment', installmentId: 'p', responsible: 'Elisa Anjo',
-  }, database, '2026-11-20'), /Confirmação manual/);
-  current = mutateOperation({
-    type: 'verify_installment', installmentId: 'p',
-    confirmed: true, responsible: 'Elisa Anjo',
-  }, database, '2026-11-20');
+  assert.equal(
+    current.pending.filter((task) => ['advance', 'initial', 'block', 'fine'].includes(task.kind))
+      .length,
+    0,
+  );
+  assert.throws(
+    () =>
+      mutateOperation(
+        {
+          type: 'verify_installment',
+          installmentId: 'p',
+          responsible: 'Elisa Anjo',
+        },
+        database,
+        '2026-11-20',
+      ),
+    /Confirmação manual/,
+  );
+  current = mutateOperation(
+    {
+      type: 'verify_installment',
+      installmentId: 'p',
+      confirmed: true,
+      responsible: 'Elisa Anjo',
+    },
+    database,
+    '2026-11-20',
+  );
   assert.equal(current.clients[0].financialStatus, 'overdue');
   assert.equal(current.installments[0].collectionStartDate, '2026-11-20');
-  assert(current.pending.some((task) => task.kind === 'portfolio_review' && task.dueDate === '2026-11-20'));
+  assert(
+    current.pending.some(
+      (task) => task.kind === 'portfolio_review' && task.dueDate === '2026-11-20',
+    ),
+  );
   assert(!current.pending.some((task) => task.kind === 'initial' && task.dueDate < '2026-11-20'));
   assert(current.activities.some((activity) => activity.action === 'payment_status_checked'));
   database.close();
 });
 
 test('pagamento confirmado não equivale à conciliação da Study', () => {
-  const database = memory(state({
-    installments: [installment({ verificationStatus: 'unverified' })],
-  }));
+  const database = memory(
+    state({
+      installments: [installment({ verificationStatus: 'unverified' })],
+    }),
+  );
   const result = payment(database);
   assert.equal(result.installments[0].status, 'paid');
   assert.equal(result.installments[0].verificationStatus, 'verified');
@@ -187,23 +217,25 @@ test('pagamento confirmado não equivale à conciliação da Study', () => {
 test('atividade operacional aparece na lista sem duplicar o relatório', () => {
   const { operationalActivityEntries } = require('../.test-build/operational-reports');
   const stateWithActivity = state({
-    activities: [{
-      id: 'event-1',
-      clientId: 'c',
-      installmentId: 'p',
-      action: 'contact',
-      category: 'operational',
-      status: 'recorded',
-      occurredAt: '2026-11-20T15:00:00.000Z',
-      date: '2026-11-20',
-      channel: 'whatsapp',
-      notes: '',
-      result: 'WhatsApp enviado ao cliente',
-      responsible: 'Elisa Anjo',
-      contact: true,
-      taskId: '',
-      amountCents: 0,
-    }],
+    activities: [
+      {
+        id: 'event-1',
+        clientId: 'c',
+        installmentId: 'p',
+        action: 'contact',
+        category: 'operational',
+        status: 'recorded',
+        occurredAt: '2026-11-20T15:00:00.000Z',
+        date: '2026-11-20',
+        channel: 'whatsapp',
+        notes: '',
+        result: 'WhatsApp enviado ao cliente',
+        responsible: 'Elisa Anjo',
+        contact: true,
+        taskId: '',
+        amountCents: 0,
+      },
+    ],
   });
   const entries = operationalActivityEntries(stateWithActivity);
   assert.equal(entries.length, 1);
@@ -212,26 +244,47 @@ test('atividade operacional aparece na lista sem duplicar o relatório', () => {
   assert.equal(entries[0].installmentId, 'p');
   assert.equal(entries[0].action, 'whatsapp_sent');
   assert.equal(entries[0].operationalLabel, 'Contato registrado');
-  const result = buildOperationalReport('2026-11-20', {
-    ...stateWithActivity,
-    today: '2026-11-20',
-  }, [], [], '', '');
+  const result = buildOperationalReport(
+    '2026-11-20',
+    {
+      ...stateWithActivity,
+      today: '2026-11-20',
+    },
+    [],
+    [],
+    '',
+    '',
+  );
   assert.equal(result.dailyActions, 1);
 });
 
 test('histórico do trabalho usa rótulos específicos para pagamentos e verificações', () => {
   const { operationalActivityEntries } = require('../.test-build/operational-reports');
   const sample = (action, status, id) => ({
-    id, clientId: 'c', installmentId: 'p',
-    action, status, category: 'verification',
-    occurredAt: '2026-11-20T14:00:00.000Z', date: '2026-11-20',
-    channel: 'system', result: 'Conferência manual',
-    notes: '', responsible: 'Elisa Anjo', contact: false, taskId: '', amountCents: 0,
+    id,
+    clientId: 'c',
+    installmentId: 'p',
+    action,
+    status,
+    category: 'verification',
+    occurredAt: '2026-11-20T14:00:00.000Z',
+    date: '2026-11-20',
+    channel: 'system',
+    result: 'Conferência manual',
+    notes: '',
+    responsible: 'Elisa Anjo',
+    contact: false,
+    taskId: '',
+    amountCents: 0,
   });
-  const rows = operationalActivityEntries(state({ activities: [
-    sample('payment_status_checked', 'recorded', 'v'),
-    sample('payment_confirmed', 'partial', 'p'),
-  ] }));
+  const rows = operationalActivityEntries(
+    state({
+      activities: [
+        sample('payment_status_checked', 'recorded', 'v'),
+        sample('payment_confirmed', 'partial', 'p'),
+      ],
+    }),
+  );
   assert.equal(rows[0].operationalLabel, 'Situação financeira verificada');
   assert.equal(rows[0].status, 'closed');
   assert.equal(rows[1].operationalLabel, 'Pagamento parcial registrado');
@@ -239,78 +292,114 @@ test('histórico do trabalho usa rótulos específicos para pagamentos e verific
 });
 
 test('cadastro de contrato antigo preserva recibos e encargos por parcela, sem cobranças nem atividades fictícias', () => {
-  const database = memory(state({
-    clients: [{
-      ...client,
-      paymentTerms: {
-        purchaseDescription: 'Curso profissionalizante',
-        installmentCount: 5,
-        installmentAmountCents: 45000,
-        frequency: 'monthly',
-        dueDay: 18,
-        firstDueDate: '2026-08-18',
-      },
-    }],
-    installments: [],
-  }));
-  const result = mutateOperation({
-    type: 'generate_installments',
-    clientId: 'c',
-    reference: 'Contrato de teste',
-    confirmed: true,
-    responsible: 'Elisa Anjo',
-    historicalPayments: [
-      { number: 1, paidDate: '2026-08-18', paidCents: 45000, chargesCents: 0 },
-      { number: 2, paidDate: '2026-09-25', paidCents: 49500, chargesCents: 4500 },
-      { number: 3, paidDate: '2026-10-18', paidCents: 45000, chargesCents: 0 },
-    ],
-  }, database, '2026-11-20');
+  const database = memory(
+    state({
+      clients: [
+        {
+          ...client,
+          paymentTerms: {
+            purchaseDescription: 'Curso profissionalizante',
+            installmentCount: 5,
+            installmentAmountCents: 45000,
+            frequency: 'monthly',
+            dueDay: 18,
+            firstDueDate: '2026-08-18',
+          },
+        },
+      ],
+      installments: [],
+    }),
+  );
+  const result = mutateOperation(
+    {
+      type: 'generate_installments',
+      clientId: 'c',
+      reference: 'Contrato de teste',
+      confirmed: true,
+      responsible: 'Elisa Anjo',
+      historicalPayments: [
+        { number: 1, paidDate: '2026-08-18', paidCents: 45000, chargesCents: 0 },
+        { number: 2, paidDate: '2026-09-25', paidCents: 49500, chargesCents: 4500 },
+        { number: 3, paidDate: '2026-10-18', paidCents: 45000, chargesCents: 0 },
+      ],
+    },
+    database,
+    '2026-11-20',
+  );
   assert.equal(result.installments.length, 5);
-  assert.deepEqual(result.installments.slice(0, 3).map((p) => p.status), ['paid', 'paid', 'paid']);
+  assert.deepEqual(
+    result.installments.slice(0, 3).map((p) => p.status),
+    ['paid', 'paid', 'paid'],
+  );
   assert.equal(result.installments[1].paidCents, 49500);
   assert.equal(result.installments[1].chargesCents, 4500);
   assert.equal(result.installments[1].paidDate, '2026-09-25');
   assert.equal(result.installments[1].historicalPaid, true);
   assert.equal(result.installments[3].verificationStatus, 'unverified');
   assert.equal(result.installments[4].verificationStatus, 'unverified');
-  assert.equal(result.pending.filter((task) => ['advance', 'due', 'initial', 'fine', 'block'].includes(task.kind)).length, 0);
-  assert.equal(result.activities.filter((activity) => activity.action === 'payment_confirmed').length, 0);
+  assert.equal(
+    result.pending.filter((task) =>
+      ['advance', 'due', 'initial', 'fine', 'block'].includes(task.kind),
+    ).length,
+    0,
+  );
+  assert.equal(
+    result.activities.filter((activity) => activity.action === 'payment_confirmed').length,
+    0,
+  );
   assert.equal(result.clients[0].financialStatus, 'verification_pending');
-  assert(result.audit.some((event) =>
-    event.reason === 'Importação de pagamento histórico confirmado, sem atividade operacional retroativa'));
+  assert(
+    result.audit.some(
+      (event) =>
+        event.reason ===
+        'Importação de pagamento histórico confirmado, sem atividade operacional retroativa',
+    ),
+  );
   database.close();
 });
 
 test('histórico rejeita valores inconsistentes e mantém importação atômica', () => {
-  const database = memory(state({
-    clients: [{
-      ...client,
-      paymentTerms: {
-        purchaseDescription: 'Curso',
-        installmentCount: 2,
-        installmentAmountCents: 45000,
-        frequency: 'monthly',
-        dueDay: 18,
-        firstDueDate: '2026-08-18',
-      },
-    }],
-    installments: [],
-  }));
+  const database = memory(
+    state({
+      clients: [
+        {
+          ...client,
+          paymentTerms: {
+            purchaseDescription: 'Curso',
+            installmentCount: 2,
+            installmentAmountCents: 45000,
+            frequency: 'monthly',
+            dueDay: 18,
+            firstDueDate: '2026-08-18',
+          },
+        },
+      ],
+      installments: [],
+    }),
+  );
   const command = {
-    type: 'generate_installments', clientId: 'c', reference: 'Curso',
+    type: 'generate_installments',
+    clientId: 'c',
+    reference: 'Curso',
     confirmed: true,
-    historicalPayments: [
-      { number: 1, paidDate: '2026-08-25', paidCents: 49500, chargesCents: 0 },
-    ],
+    historicalPayments: [{ number: 1, paidDate: '2026-08-25', paidCents: 49500, chargesCents: 0 }],
   };
   assert.throws(() => mutateOperation(command, database, '2026-11-20'), /valor recebido/);
   assert.equal(snapshot(database).installments.length, 0);
-  assert.throws(() => mutateOperation({
-    ...command,
-    historicalPayments: [
-      { number: 1, paidDate: '2026-12-01', paidCents: 45000, chargesCents: 0 },
-    ],
-  }, database, '2026-11-20'), /Data efetiva/);
+  assert.throws(
+    () =>
+      mutateOperation(
+        {
+          ...command,
+          historicalPayments: [
+            { number: 1, paidDate: '2026-12-01', paidCents: 45000, chargesCents: 0 },
+          ],
+        },
+        database,
+        '2026-11-20',
+      ),
+    /Data efetiva/,
+  );
   assert.equal(snapshot(database).installments.length, 0);
   database.close();
 });

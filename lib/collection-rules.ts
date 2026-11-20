@@ -104,8 +104,15 @@ export function generateCollectionTasks(s: OperationSnapshot, today: string): Pe
       for (const p of installments) {
         if (!isUnpaid(p) || p.verificationStatus === 'unverified') continue;
         if (p.collectionStartDate && isOverdue(p, today)) {
-          add(client.id, p.id, 'portfolio_review', p.collectionStartDate, p.collectionStartDate,
-            'Primeira verificação registrada. Avalie o histórico real antes de iniciar a cobrança.', 'high');
+          add(
+            client.id,
+            p.id,
+            'portfolio_review',
+            p.collectionStartDate,
+            p.collectionStartDate,
+            'Primeira verificação registrada. Avalie o histórico real antes de iniciar a cobrança.',
+            'high',
+          );
         }
         const cycle = p.id;
         const first = nextBusinessDay(p.dueDate, e);

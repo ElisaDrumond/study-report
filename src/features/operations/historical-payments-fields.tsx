@@ -17,13 +17,13 @@ export default function HistoricalPaymentsFields({ plan, today }: Props) {
     <section className={op.historicalPayments}>
       <h3>Pagamentos de meses anteriores</h3>
       <p>
-        Se este contrato já estava em andamento, marque apenas as parcelas que você
-        confirmou como quitadas no sistema da Study. Cada uma aceita data, valor
-        efetivamente recebido e multa/encargos específicos em USD.
+        Se este contrato já estava em andamento, marque apenas as parcelas que você confirmou como
+        quitadas no sistema da Study. Cada uma aceita data, valor efetivamente recebido e
+        multa/encargos específicos em USD.
       </p>
       <p>
-        Parcelas não marcadas permanecerão com a situação a verificar, sem cobrança
-        automática. Cadastrar histórico antigo não será contado como atividade realizada hoje.
+        Parcelas não marcadas permanecerão com a situação a verificar, sem cobrança automática.
+        Cadastrar histórico antigo não será contado como atividade realizada hoje.
       </p>
       {past.map((item) => {
         const checked = selected.includes(item.number);
@@ -44,7 +44,9 @@ export default function HistoricalPaymentsFields({ plan, today }: Props) {
               />
               <span>
                 <strong>Parcela {item.number}</strong>
-                <small>Vencimento {fmt(item.dueDate)} · Original {money(item.amountCents)}</small>
+                <small>
+                  Vencimento {fmt(item.dueDate)} · Original {money(item.amountCents)}
+                </small>
               </span>
               <span className={op.historicalState}>{checked ? 'Já foi paga' : 'A verificar'}</span>
             </label>
@@ -86,8 +88,8 @@ export default function HistoricalPaymentsFields({ plan, today }: Props) {
         );
       })}
       <small>
-        Valor recebido deve ser igual ao valor original mais os encargos informados.
-        Pagamentos parciais e descontos serão registrados individualmente em outro fluxo.
+        Valor recebido deve ser igual ao valor original mais os encargos informados. Pagamentos
+        parciais e descontos serão registrados individualmente em outro fluxo.
       </small>
     </section>
   );

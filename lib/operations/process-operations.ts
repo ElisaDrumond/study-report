@@ -12,8 +12,11 @@ export function processOperations(database = defaultDb(), referenceDate?: string
     // reviewed, not silently treated as confirmed unpaid debt.
     const generatedIds = new Set(
       state.audit
-        .filter((event) => event.entity === 'installment' &&
-          event.reason === 'Geração contratual confirmada manualmente')
+        .filter(
+          (event) =>
+            event.entity === 'installment' &&
+            event.reason === 'Geração contratual confirmada manualmente',
+        )
         .map((event) => event.entityId),
     );
     let verificationMigrated = false;
@@ -26,8 +29,14 @@ export function processOperations(database = defaultDb(), referenceDate?: string
       ) {
         const updated = { ...installment, verificationStatus: 'unverified' as const };
         put(database, 'op_installments', updated);
-        audit(database, 'installment', installment.id, installment, updated,
-          'Situação inicial a verificar; nenhum pagamento inferido');
+        audit(
+          database,
+          'installment',
+          installment.id,
+          installment,
+          updated,
+          'Situação inicial a verificar; nenhum pagamento inferido',
+        );
         verificationMigrated = true;
       }
     }
@@ -90,7 +99,11 @@ export function processOperations(database = defaultDb(), referenceDate?: string
                 : client.serviceStatus;
       const updated: Client = {
         ...client,
-        financialStatus: overdue ? 'overdue' : verificationPending ? 'verification_pending' : 'current',
+        financialStatus: overdue
+          ? 'overdue'
+          : verificationPending
+            ? 'verification_pending'
+            : 'current',
         serviceStatus,
         serviceOverride: overdue ? client.serviceOverride : false,
       };

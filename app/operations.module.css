@@ -176,25 +176,33 @@
   background: #fffbeb;
   border-color: #fcd34d;
 }
-.actionReview:hover { background: #fef3c7; }
+.actionReview:hover {
+  background: #fef3c7;
+}
 .actionPayment {
   color: #ffffff;
   background: #16794b;
   border-color: #11633d;
 }
-.actionPayment:hover { background: #11633d; }
+.actionPayment:hover {
+  background: #11633d;
+}
 .actionSchedule {
   color: #1d4ed8;
   background: #eff6ff;
   border-color: #bfdbfe;
 }
-.actionSchedule:hover { background: #dbeafe; }
+.actionSchedule:hover {
+  background: #dbeafe;
+}
 .actionNeutral {
   color: #475569;
   background: #f8fafc;
   border-color: #cbd5e1;
 }
-.actionNeutral:hover { background: #f1f5f9; }
+.actionNeutral:hover {
+  background: #f1f5f9;
+}
 .actionReview:focus-visible,
 .actionPayment:focus-visible,
 .actionSchedule:focus-visible,
@@ -234,10 +242,14 @@
   font-size: 11px;
 }
 @media (max-width: 1000px) {
-  .workflow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .workflow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 @media (max-width: 520px) {
-  .workflow { grid-template-columns: 1fr; }
+  .workflow {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Historical payments are classified inside the reviewed installment wizard. */
@@ -250,8 +262,13 @@
   border-radius: 14px;
   background: #faf9ff;
 }
-.historicalPayments h3 { color: #443778; margin: 0; font-size: 15px; }
-.historicalPayments p, .historicalPayments > small {
+.historicalPayments h3 {
+  color: #443778;
+  margin: 0;
+  font-size: 15px;
+}
+.historicalPayments p,
+.historicalPayments > small {
   color: #777d96;
   font-size: 12px;
   line-height: 1.6;
@@ -270,9 +287,21 @@
   color: #42425d;
   cursor: pointer;
 }
-.historicalCheck input { width: 17px; height: 17px; accent-color: #16794b; }
-.historicalCheck strong { display: block; font-size: 12px; }
-.historicalCheck small { display: block; font-size: 11px; color: #858da2; margin-top: 3px; }
+.historicalCheck input {
+  width: 17px;
+  height: 17px;
+  accent-color: #16794b;
+}
+.historicalCheck strong {
+  display: block;
+  font-size: 12px;
+}
+.historicalCheck small {
+  display: block;
+  font-size: 11px;
+  color: #858da2;
+  margin-top: 3px;
+}
 .historicalState {
   margin-left: auto;
   font-size: 11px;
@@ -302,5 +331,7 @@
   color: #363a56;
 }
 @media (max-width: 650px) {
-  .historicalFields { grid-template-columns: 1fr; }
+  .historicalFields {
+    grid-template-columns: 1fr;
+  }
 }

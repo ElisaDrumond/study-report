@@ -121,11 +121,7 @@ export default function Dashboard() {
         ) : (
           <>
             {isOperationsView && (
-              <Operations
-                key={tab}
-                view={tab}
-                onNavigate={(destination) => setTab(destination)}
-              />
+              <Operations key={tab} view={tab} onNavigate={(destination) => setTab(destination)} />
             )}
 
             {tab === 'overview' && (

@@ -20,10 +20,12 @@ export function operationalActivityEntries(state: OperationSnapshot): Entry[] {
         status = a.status === 'paid' ? 'payment_confirmed' : 'closed';
       } else if (a.action === 'payment_scheduled') {
         status = 'payment_scheduled';
-      } else if (a.action === 'payment_status_checked' ||
+      } else if (
+        a.action === 'payment_status_checked' ||
         a.action === 'task_deferred' ||
         a.action === 'service_blocked' ||
-        a.action === 'service_unblocked') {
+        a.action === 'service_unblocked'
+      ) {
         status = 'closed';
       } else if (a.action === 'external_collection') {
         status = 'external_collection';

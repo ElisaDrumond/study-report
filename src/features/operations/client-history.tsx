@@ -160,7 +160,9 @@ export default function ClientHistory({
                 </p>
                 <button
                   className={styles.primary}
-                  onClick={() => openClient('generate_installments', 'Revisar e gerar parcelas', client)}
+                  onClick={() =>
+                    openClient('generate_installments', 'Revisar e gerar parcelas', client)
+                  }
                 >
                   Confirmar geração das parcelas
                 </button>
@@ -214,7 +216,9 @@ export default function ClientHistory({
                 </td>
                 <td>
                   {p.status === 'paid'
-                    ? (p.historicalPaid ? 'Quitada (histórico)' : 'Quitada')
+                    ? p.historicalPaid
+                      ? 'Quitada (histórico)'
+                      : 'Quitada'
                     : p.status === 'partial'
                       ? 'Pagamento parcial'
                       : p.status === 'cancelled'
@@ -222,8 +226,8 @@ export default function ClientHistory({
                         : p.verificationStatus === 'unverified'
                           ? 'Situação a verificar'
                           : isOverdue(p, today)
-                          ? 'Vencida'
-                          : 'Em aberto'}
+                            ? 'Vencida'
+                            : 'Em aberto'}
                   {p.scheduledDate && p.status !== 'paid' && (
                     <small className={op.detail}>
                       Previsto: {fmt(p.scheduledDate)} (sem confirmação)
@@ -235,7 +239,14 @@ export default function ClientHistory({
                     {p.verificationStatus === 'unverified' && p.status !== 'cancelled' && (
                       <button
                         className={op.actionReview}
-                        onClick={() => openClient('verify_installment', 'Verificar situação da parcela', client, p)}
+                        onClick={() =>
+                          openClient(
+                            'verify_installment',
+                            'Verificar situação da parcela',
+                            client,
+                            p,
+                          )
+                        }
                       >
                         <ClipboardCheck size={16} /> Verificar situação
                       </button>
@@ -259,7 +270,9 @@ export default function ClientHistory({
                     <button
                       className={op.actionSchedule}
                       disabled={p.status === 'paid' || p.status === 'cancelled'}
-                      onClick={() => openClient('schedule_payment', 'Registrar previsão de pagamento', client, p)}
+                      onClick={() =>
+                        openClient('schedule_payment', 'Registrar previsão de pagamento', client, p)
+                      }
                     >
                       <CalendarClock size={16} /> Previsão de pagamento
                     </button>
