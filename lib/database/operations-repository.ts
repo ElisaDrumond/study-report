@@ -1,13 +1,13 @@
 import type Database from 'better-sqlite3';
 import {
-defaultSettings,
-type Client,
-type CollectionSettings,
-type OperationActivity,
-type OperationSnapshot
+  defaultSettings,
+  type Client,
+  type CollectionSettings,
+  type OperationActivity,
+  type OperationSnapshot,
 } from '../collection-types';
 import { db as defaultDb } from '../db';
-import { actions,validateEntry } from '../rules';
+import { actions, validateEntry } from '../rules';
 import type { Entry } from '../types';
 export type Row = { id: string; data: string };
 export const tables = [
@@ -118,6 +118,12 @@ export function audit(
     true,
   );
 }
-export function getCommandRecord(database:Database.Database,id:string){return database.prepare('SELECT data FROM op_commands WHERE id=?').get(id) as Row|undefined;}
-export function getLegacyNames(database:Database.Database){return database.prepare('SELECT name FROM entries ORDER BY rowid').all() as {name:string}[];}
-export function deleteCalendarException(database:Database.Database,id:string){database.prepare('DELETE FROM op_calendar WHERE id=?').run(id);}
+export function getCommandRecord(database: Database.Database, id: string) {
+  return database.prepare('SELECT data FROM op_commands WHERE id=?').get(id) as Row | undefined;
+}
+export function getLegacyNames(database: Database.Database) {
+  return database.prepare('SELECT name FROM entries ORDER BY rowid').all() as { name: string }[];
+}
+export function deleteCalendarException(database: Database.Database, id: string) {
+  database.prepare('DELETE FROM op_calendar WHERE id=?').run(id);
+}

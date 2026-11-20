@@ -1,16 +1,8 @@
-import {
-getNextCollectionDate,
-operationToday
-} from '../business-calendar';
+import { getNextCollectionDate, operationToday } from '../business-calendar';
 import { generateCollectionTasks } from '../collection-rules';
-import {
-isOverdue,
-isUnpaid
-} from '../collection-status';
-import {
-type Client
-} from '../collection-types';
-import { audit,put,snapshot } from '../database/operations-repository';
+import { isOverdue, isUnpaid } from '../collection-status';
+import { type Client } from '../collection-types';
+import { audit, put, snapshot } from '../database/operations-repository';
 import { db as defaultDb } from '../db';
 import { reconcileTasks } from '../task-generator';
 export function processOperations(database = defaultDb(), referenceDate?: string) {

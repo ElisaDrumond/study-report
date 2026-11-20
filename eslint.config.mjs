@@ -3,7 +3,7 @@ import prettier from 'eslint-config-prettier/flat';
 
 const compat = new FlatCompat({ baseDirectory: import.meta.dirname });
 
-export default [
+const eslintConfig = [
   {
     ignores: [
       'node_modules/**',
@@ -38,3 +38,5 @@ export default [
     },
   },
 ];
+
+export default eslintConfig;

@@ -1,34 +1,27 @@
 'use client';
-import { useEffect,useMemo,useState } from 'react';
-import {
-operationToday,
-shiftDate
-} from '../../../lib/business-calendar';
-import type {
-Installment,
-OperationActivity,
-PendingTask
-} from '../../../lib/collection-types';
-import { cents,empty } from './operations-presenters';
+import { useEffect, useMemo, useState } from 'react';
+import { operationToday, shiftDate } from '../../../lib/business-calendar';
+import type { Installment, OperationActivity, PendingTask } from '../../../lib/collection-types';
+import { cents, empty } from './operations-presenters';
 import type { Dialog } from './operations-view-types';
-export function useOperations(view:'central'|'clients'|'calendar'){
-const [s, setS] = useState(empty),
+export function useOperations(view: 'central' | 'clients' | 'calendar') {
+  const [operationsState, setOperationsState] = useState(empty),
     [loading, setLoading] = useState(true),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(''),
     [message, setMessage] = useState('');
-const [dialog, setDialog] = useState<Dialog | null>(null),
+  const [dialog, setDialog] = useState<Dialog | null>(null),
     [historyClient, setHistoryClient] = useState(''),
     [selectedClient, setSelectedClient] = useState('');
-const [range, setRange] = useState('today'),
+  const [range, setRange] = useState('today'),
     [priority, setPriority] = useState('all'),
     [category, setCategory] = useState('all'),
     [status, setStatus] = useState('pending'),
     [clientFilter, setClientFilter] = useState('all');
-const [month, setMonth] = useState(() => operationToday().slice(0, 7));
-const operationId = useMemo(() => crypto.randomUUID(), [dialog]);
-const today = operationToday(s.settings.timezone);
-async function request(command?: Record<string, unknown>) {
+  const [month, setMonth] = useState(() => operationToday().slice(0, 7));
+  const operationId = useMemo(() => (dialog ? crypto.randomUUID() : ''), [dialog]);
+  const today = operationToday(operationsState.settings.timezone);
+  async function request(command?: Record<string, unknown>) {
     const response = await fetch('/api/operations', {
       method: command ? 'POST' : 'GET',
       headers: { 'Content-Type': 'application/json' },
@@ -37,16 +30,16 @@ async function request(command?: Record<string, unknown>) {
     });
     const data = await response.json();
     if (!response.ok) throw Error(data.error || 'Não foi possível carregar as operações');
-    setS(data);
+    setOperationsState(data);
     return data;
   }
-useEffect(() => {
+  useEffect(() => {
     let mounted = true;
     fetch('/api/operations', { cache: 'no-store' })
       .then(async (r) => {
         const data = await r.json();
         if (!r.ok) throw Error(data.error);
-        if (mounted) setS(data);
+        if (mounted) setOperationsState(data);
       })
       .catch((e) => {
         if (mounted) setError(e.message);
@@ -58,7 +51,7 @@ useEffect(() => {
       mounted = false;
     };
   }, [view]);
-async function run(command: Record<string, unknown>) {
+  async function run(command: Record<string, unknown>) {
     setBusy(true);
     setError('');
     setMessage('');
@@ -72,7 +65,7 @@ async function run(command: Record<string, unknown>) {
       setBusy(false);
     }
   }
-async function reload() {
+  async function reload() {
     setBusy(true);
     setError('');
     try {
@@ -83,17 +76,19 @@ async function reload() {
       setBusy(false);
     }
   }
-const clientName = (id: string) =>
-    s.clients.find((c) => c.id === id)?.name || 'Cliente não localizado';
-const installmentName = (id: string) => {
-    const p = s.installments.find((p) => p.id === id);
+  const clientName = (id: string) =>
+    operationsState.clients.find((c) => c.id === id)?.name || 'Cliente não localizado';
+  const installmentName = (id: string) => {
+    const p = operationsState.installments.find((p) => p.id === id);
     return p ? `${p.reference} · parcela ${p.number}` : 'Carteira do cliente';
   };
-const active = s.pending.filter((t) => t.status === 'open' || t.status === 'deferred');
-const collectionKinds = ['advance', 'due', 'initial', 'window', 'alternate'];
-const lastActions = new Map<string, OperationActivity>();
-for (const a of s.activities) if (a.contact) lastActions.set(a.clientId, a);
-const stats = [
+  const active = operationsState.pending.filter(
+    (t) => t.status === 'open' || t.status === 'deferred',
+  );
+  const collectionKinds = ['advance', 'due', 'initial', 'window', 'alternate'];
+  const lastActions = new Map<string, OperationActivity>();
+  for (const a of operationsState.activities) if (a.contact) lastActions.set(a.clientId, a);
+  const stats = [
     [
       'Cobranças a realizar',
       active.filter((t) => collectionKinds.includes(t.kind) && t.dueDate <= today).length,
@@ -108,8 +103,9 @@ const stats = [
     ],
     [
       'Renegociações pendentes',
-      s.negotiations.filter((n) => ['proposal_received', 'awaiting_approval'].includes(n.status))
-        .length,
+      operationsState.negotiations.filter((n) =>
+        ['proposal_received', 'awaiting_approval'].includes(n.status),
+      ).length,
     ],
     ['Atividades vencidas', active.filter((t) => t.dueDate < today).length],
     [
@@ -126,13 +122,16 @@ const stats = [
     ],
     [
       'Pagamentos agendados',
-      s.installments.filter(
+      operationsState.installments.filter(
         (p) => p.scheduledDate && p.status !== 'paid' && p.status !== 'cancelled',
       ).length,
     ],
-    ['Atividades concluídas no dia', s.activities.filter((a) => a.date === today).length],
+    [
+      'Atividades concluídas no dia',
+      operationsState.activities.filter((a) => a.date === today).length,
+    ],
   ];
-const queue = s.pending
+  const queue = operationsState.pending
     .filter(
       (t) =>
         (status === 'all' || status === 'pending'
@@ -151,18 +150,19 @@ const queue = s.pending
         a.dueDate.localeCompare(b.dueDate) ||
         { high: 0, normal: 1, low: 2 }[a.priority] - { high: 0, normal: 1, low: 2 }[b.priority],
     );
-const selectClient = s.clients.find((c) => c.id === selectedClient) || s.clients[0];
-function openTask(type: string, task: PendingTask, title: string) {
+  const selectClient =
+    operationsState.clients.find((c) => c.id === selectedClient) || operationsState.clients[0];
+  function openTask(type: string, task: PendingTask, title: string) {
     setError('');
     setDialog({
       type,
       title,
       task,
-      client: s.clients.find((c) => c.id === task.clientId),
-      installment: s.installments.find((p) => p.id === task.installmentId),
+      client: operationsState.clients.find((c) => c.id === task.clientId),
+      installment: operationsState.installments.find((p) => p.id === task.installmentId),
     });
   }
-function openClient(
+  function openClient(
     type: string,
     title: string,
     client = selectClient,
@@ -171,7 +171,7 @@ function openClient(
     setError('');
     setDialog({ type, title, client, installment });
   }
-async function submit(event: React.FormEvent<HTMLFormElement>) {
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!dialog) return;
     setError('');
@@ -216,12 +216,53 @@ async function submit(event: React.FormEvent<HTMLFormElement>) {
       setError((e as Error).message);
     }
   }
-const exception = dialog?.exceptionId
-    ? s.exceptions.find((e) => e.id === dialog.exceptionId)
+  const exception = dialog?.exceptionId
+    ? operationsState.exceptions.find((e) => e.id === dialog.exceptionId)
     : undefined;
-const d = dialog,
-    p = d?.installment,
-    n = d?.negotiation;
-return {today,s,error,message,stats,reload,busy,range,setRange,priority,setPriority,category,setCategory,clientFilter,setClientFilter,status,setStatus,queue,clientName,installmentName,openTask,setHistoryClient,run,setError,setDialog,selectClient,setSelectedClient,openClient,historyClient,month,setMonth,d,submit,operationId,p,n,exception,collectionKinds,loading};
+  const activeDialog = dialog;
+  const selectedInstallment = activeDialog?.installment;
+  const selectedNegotiation = activeDialog?.negotiation;
+  return {
+    today,
+    operationsState,
+    error,
+    message,
+    stats,
+    reload,
+    busy,
+    range,
+    setRange,
+    priority,
+    setPriority,
+    category,
+    setCategory,
+    clientFilter,
+    setClientFilter,
+    status,
+    setStatus,
+    queue,
+    clientName,
+    installmentName,
+    openTask,
+    setHistoryClient,
+    run,
+    setError,
+    setDialog,
+    selectClient,
+    setSelectedClient,
+    openClient,
+    historyClient,
+    month,
+    setMonth,
+    activeDialog,
+    submit,
+    operationId,
+    selectedInstallment,
+    selectedNegotiation,
+    exception,
+    collectionKinds,
+    loading,
+  };
 }
-export type OperationsController=ReturnType<typeof useOperations>;
+
+export type OperationsController = ReturnType<typeof useOperations>;

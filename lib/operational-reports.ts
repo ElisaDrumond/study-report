@@ -1,9 +1,9 @@
-import { daysOverdue,isOverdue,outstandingCents } from './collection-status';
+import { daysOverdue, isOverdue, outstandingCents } from './collection-status';
 import type { OperationSnapshot } from './collection-types';
-import { getEntries,getTasks } from './db';
+import { getEntries, getTasks } from './db';
 import { processOperations } from './operations-store';
-import { buildReport,fmt } from './rules';
-import type { Action,Entry,Status,Task } from './types';
+import { buildReport, fmt } from './rules';
+import type { Action, Entry, Status, Task } from './types';
 const money = (c: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(c / 100);
 export function buildStoredReport(date: string, extra = '', nextSteps = '') {

@@ -6,7 +6,7 @@
     "dev": "next dev --hostname 127.0.0.1",
     "build": "next build",
     "start": "next start --hostname 127.0.0.1",
-    "test": "tsc -p tsconfig.tests.json && node --test tests/*.cjs",
+    "test": "tsc -p tsconfig.tests.json && node --test --test-reporter=./scripts/spaced-reporter.mjs tests/*.cjs",
     "lint": "eslint . --max-warnings=0",
     "lint:fix": "eslint . --fix --max-warnings=0",
     "format": "prettier --write .",

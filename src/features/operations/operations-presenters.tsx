@@ -1,10 +1,7 @@
 'use client';
 import { taskLabels } from '../../../lib/collection-rules';
 import { negotiationLabels } from '../../../lib/collection-status';
-import type {
-OperationActivity,
-OperationSnapshot
-} from '../../../lib/collection-types';
+import type { OperationActivity, OperationSnapshot } from '../../../lib/collection-types';
 import { defaultSettings } from '../../../lib/collection-types';
 import { actions as legacyActions } from '../../../lib/rules';
 export const empty: OperationSnapshot = {

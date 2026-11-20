@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { isLocalRequest } from '../../../lib/local-request';
-import { mutateOperation,processOperations } from '../../../lib/operations-store';
+import { mutateOperation, processOperations } from '../../../lib/operations-store';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export async function GET() {

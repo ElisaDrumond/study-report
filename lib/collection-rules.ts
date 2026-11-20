@@ -1,12 +1,12 @@
 import {
-addBusinessDays,
-getNextCollectionDate,
-nextBusinessDay,
-previousOrSameBusinessDay,
-shiftDate,
+  addBusinessDays,
+  getNextCollectionDate,
+  nextBusinessDay,
+  previousOrSameBusinessDay,
+  shiftDate,
 } from './business-calendar';
-import { daysOverdue,isOverdue,isUnpaid } from './collection-status';
-import type { OperationSnapshot,PendingTask } from './collection-types';
+import { daysOverdue, isOverdue, isUnpaid } from './collection-status';
+import type { OperationSnapshot, PendingTask } from './collection-types';
 import { isDate } from './rules';
 export const taskLabels: Record<string, string> = {
   advance: 'Enviar e-mail e WhatsApp com link de pagamento',

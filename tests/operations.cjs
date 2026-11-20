@@ -3,7 +3,6 @@ const assert = require('node:assert/strict');
 const Database = require('better-sqlite3');
 const calendar = require('../.test-build/business-calendar');
 const { generateCollectionTasks } = require('../.test-build/collection-rules');
-const { reconcileTasks } = require('../.test-build/task-generator');
 const { defaultSettings } = require('../.test-build/collection-types');
 const { migrateOperations } = require('../.test-build/operations-migration');
 const { migrateReports } = require('../.test-build/db');

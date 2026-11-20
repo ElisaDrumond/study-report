@@ -90,7 +90,11 @@ async function browser() {
     if (m.id && pending.has(m.id)) {
       const handler = pending.get(m.id);
       pending.delete(m.id);
-      m.error ? handler.reject(Error(m.error.message)) : handler.resolve(m.result);
+      if (m.error) {
+        handler.reject(Error(m.error.message));
+      } else {
+        handler.resolve(m.result);
+      }
     }
     if (m.method === 'Runtime.exceptionThrown') exceptions.push(m.params.exceptionDetails.text);
   });

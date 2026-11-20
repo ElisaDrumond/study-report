@@ -1,15 +1,20 @@
 'use client';
-import type { Entry,Task } from '../../../lib/types';
+
+import type { Entry, Task } from '../../../lib/types';
+
 export type Tab =
   'central' | 'clients' | 'calendar' | 'overview' | 'activities' | 'daily' | 'reports' | 'history';
+
 export const today = () => {
-  const d = new Date();
+  const date = new Date();
+
   return [
-    d.getFullYear(),
-    String(d.getMonth() + 1).padStart(2, '0'),
-    String(d.getDate()).padStart(2, '0'),
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0'),
   ].join('-');
 };
+
 export const freshEntry = (date: string): Entry => ({
   id: crypto.randomUUID(),
   name: '',
@@ -22,6 +27,7 @@ export const freshEntry = (date: string): Entry => ({
   scheduled: '',
   notes: '',
 });
+
 export const freshTask = (date: string): Task => ({
   id: crypto.randomUUID(),
   title: '',
@@ -29,11 +35,17 @@ export const freshTask = (date: string): Task => ({
   details: '',
   date,
 });
-export const parseResponse = async (r: Response) => {
-  const json = await r.json();
-  if (!r.ok) throw Error(json.error || 'Ocorreu um erro');
-  return json;
+
+export const parseResponse = async (response: Response) => {
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw Error(data.error || 'Ocorreu um erro');
+  }
+
+  return data;
 };
+
 export const route = async (path: string, method = 'GET', payload?: unknown) =>
   parseResponse(
     await fetch(`/api/${path}`, {
