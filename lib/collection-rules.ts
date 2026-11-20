@@ -8,6 +8,7 @@ import {
 import { daysOverdue, isOverdue, isUnpaid } from './collection-status';
 import type { OperationSnapshot, PendingTask } from './collection-types';
 import { isDate } from './rules';
+import { isReportableOperationalActivity } from './operational-activity-scope';
 export const taskLabels: Record<string, string> = {
   advance: 'Enviar e-mail e WhatsApp com link de pagamento',
   due: 'Lembrar vencimento por WhatsApp',
@@ -245,7 +246,9 @@ export function generateCollectionTasks(s: OperationSnapshot, today: string): Pe
           e,
         );
         if (today >= afterWindow) {
-          const base = lastContact?.date || afterWindow;
+          const base = lastContact && lastContact.date > afterWindow
+            ? lastContact.date
+            : afterWindow;
           add(
             client.id,
             oldest.id,
@@ -282,7 +285,7 @@ export function generateCollectionTasks(s: OperationSnapshot, today: string): Pe
       }
     }
     const payments = s.activities.filter(
-      (a) => a.clientId === client.id && a.action === 'payment_confirmed',
+      (a) => a.clientId === client.id && a.action === 'payment_confirmed' && isReportableOperationalActivity(a),
     );
     for (const payment of payments) {
       const installment = installments.find((p) => p.id === payment.installmentId);
