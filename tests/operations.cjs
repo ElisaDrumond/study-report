@@ -515,6 +515,104 @@ test('parcela futura recebe lembretes sem exigir verificação de pagamento hist
   database.close();
 });
 
+test('carteira antiga confirmada sugere cobrança imediata e avaliação externa sem segunda revisão', () => {
+  const database = memory(state({
+    clients: [{
+      ...client,
+      paymentTerms: {
+        purchaseDescription: 'Curso de teste',
+        installmentCount: 3,
+        installmentAmountCents: 30000,
+        frequency: 'monthly',
+        dueDay: 5,
+        firstDueDate: '2026-08-05',
+      },
+    }],
+    installments: [],
+  }));
+  const result = mutateOperation({
+    type: 'generate_installments',
+    clientId: 'c',
+    reference: 'Contrato antigo',
+    confirmed: true,
+    historicalPayments: [
+      { number: 1, paidDate: '2026-08-05', paidCents: 30000, chargesCents: 0 },
+    ],
+  }, database, '2026-11-20');
+  assert.equal(result.installments[0].status, 'paid');
+  assert.equal(result.installments[1].verificationStatus, 'verified');
+  assert.equal(result.installments[2].verificationStatus, 'verified');
+  assert(result.installments.slice(1).every((item) => item.collectionStartDate === '2026-11-20'));
+  assert(!result.pending.some((task) => task.kind === 'portfolio_review' && task.status === 'open'));
+  const active = result.pending.filter((task) => task.status === 'open');
+  assert(active.some((task) => task.kind === 'alternate' && task.dueDate === '2026-11-20'));
+  assert(active.some((task) => task.kind === 'external_review' && task.dueDate === '2026-11-20'));
+  assert(!active.some((task) => task.installmentId === result.installments[0].id));
+  assert(!active.some((task) => ['advance', 'due', 'initial', 'window'].includes(task.kind)));
+  assert.equal(result.activities.length, 0);
+  database.close();
+});
+
+test('cobrança de carteira antiga repete dois dias úteis após contato real, sem revisão intermediária', () => {
+  const database = memory(state({
+    installments: [
+      installment({
+        dueDate: '2026-10-05',
+        verificationStatus: 'verified',
+        collectionStartDate: '2026-11-20',
+      }),
+    ],
+  }));
+  let result = processOperations(database, '2026-11-20');
+  assert(result.pending.some((task) =>
+    task.kind === 'alternate' && task.dueDate === '2026-11-20' && task.status === 'open'));
+  assert(!result.pending.some((task) =>
+    task.kind === 'portfolio_review' && task.status === 'open'));
+  const contacted = {
+    id: 'contact-1', clientId: 'c', installmentId: 'p',
+    action: 'contact', category: 'operational', status: 'recorded',
+    date: '2026-11-20', occurredAt: '2026-11-20T12:00:00Z',
+    channel: 'whatsapp', notes: '', result: 'Contato real registrado',
+    responsible: 'Elisa Anjo', contact: true, taskId: '', amountCents: 0,
+  };
+  database.prepare('INSERT INTO op_activities VALUES (?, ?)').run(
+    contacted.id, JSON.stringify(contacted),
+  );
+  result = processOperations(database, '2026-11-20');
+  assert(result.pending.some((task) =>
+    task.kind === 'alternate' && task.dueDate === '2026-11-24' && task.status === 'open'));
+  assert(!result.pending.some((task) =>
+    task.kind === 'alternate' && task.dueDate === '2026-11-20' && task.status === 'open'));
+  database.close();
+});
+
+test('revisão inicial antiga pendente deixa de aparecer quando a régua é recalculada', () => {
+  const database = memory(state({
+    installments: [
+      installment({
+        dueDate: '2026-10-05',
+        verificationStatus: 'verified',
+        collectionStartDate: '2026-11-20',
+      }),
+    ],
+    pending: [{
+      id: JSON.stringify(['portfolio_review', 'c', 'p', '2026-11-20']),
+      clientId: 'c', installmentId: 'p', kind: 'portfolio_review',
+      rule: 'portfolio_review', cycle: '2026-11-20',
+      dueDate: '2026-11-20', priority: 'high', status: 'open',
+      reason: 'Revisão redundante', recommendation: 'Revisar parcela',
+      completedAt: '', deferReason: '', resolvedActivityId: '',
+      createdAt: '2026-11-20',
+    }],
+  }));
+  const result = processOperations(database, '2026-11-20');
+  assert(result.pending.some((task) =>
+    task.kind === 'portfolio_review' && task.status === 'cancelled'));
+  assert(result.pending.some((task) =>
+    task.kind === 'alternate' && task.status === 'open'));
+  database.close();
+});
+
 test('calendário: sexta-feira, feriado segunda, recesso e sábado útil', () => {
   assert.equal(
     calendar.operationToday('America/Sao_Paulo', new Date('2026-11-21T01:00:00Z')),

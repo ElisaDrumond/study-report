@@ -25,7 +25,6 @@ export const taskLabels: Record<string, string> = {
   crm: 'Atualizar CRM',
   management: 'Encaminhar caso para análise da gestão',
   external_review: 'Avaliar cobrança externa',
-  portfolio_review: 'Revisar parcela vencida após conferência inicial',
 };
 export function generateCollectionTasks(s: OperationSnapshot, today: string): PendingTask[] {
   if (!isDate(today)) throw Error('Data operacional inválida');
@@ -104,17 +103,6 @@ export function generateCollectionTasks(s: OperationSnapshot, today: string): Pe
     if (!external) {
       for (const p of installments) {
         if (!isUnpaid(p) || p.verificationStatus === 'unverified') continue;
-        if (p.collectionStartDate && isOverdue(p, today)) {
-          add(
-            client.id,
-            p.id,
-            'portfolio_review',
-            p.collectionStartDate,
-            p.collectionStartDate,
-            'Primeira verificação registrada. Avalie o histórico real antes de iniciar a cobrança.',
-            'high',
-          );
-        }
         const cycle = p.id;
         const first = nextBusinessDay(p.dueDate, e);
         const scheduled = p.scheduledDate && isDate(p.scheduledDate);
@@ -245,9 +233,36 @@ export function generateCollectionTasks(s: OperationSnapshot, today: string): Pe
           addBusinessDays(nextBusinessDay(oldest.dueDate, e), cfg.followupBusinessDays, e),
           e,
         );
-        if (today >= afterWindow) {
-          const base =
-            lastContact && lastContact.date > afterWindow ? lastContact.date : afterWindow;
+        // An imported, already-overdue installment starts follow-up on the day
+        // the operator confirms its initial status, not on the historical due date.
+        // Before the first actual contact, the first actionable collection can be today.
+        const collectionStart = oldest.collectionStartDate;
+        const freshPortfolio =
+          !!collectionStart && oldest.dueDate < collectionStart;
+        const recentContact = lastContact &&
+          (!collectionStart || lastContact.date >= collectionStart)
+          ? lastContact
+          : undefined;
+        if (freshPortfolio && today >= collectionStart) {
+          const due = recentContact
+            ? addBusinessDays(recentContact.date, cfg.alternateBusinessDays, e)
+            : getNextCollectionDate(collectionStart, e);
+          add(
+            client.id,
+            oldest.id,
+            'alternate',
+            recentContact?.id || oldest.id,
+            due,
+            recentContact
+              ? 'Continuar a cobrança a cada ' + cfg.alternateBusinessDays +
+                ' dias úteis após o último contato efetivamente registrado.'
+              : 'Contrato antigo conferido: iniciar acompanhamento da parcela em aberto.',
+            'high',
+          );
+        } else if (today >= afterWindow) {
+          const base = lastContact && lastContact.date > afterWindow
+            ? lastContact.date
+            : afterWindow;
           add(
             client.id,
             oldest.id,
@@ -277,8 +292,13 @@ export function generateCollectionTasks(s: OperationSnapshot, today: string): Pe
             oldest.id,
             'external_review',
             oldest.id,
-            getNextCollectionDate(shiftDate(oldest.dueDate, cfg.externalReviewDays), e),
-            `${overdue.length} parcelas vencidas; ${daysOverdue(oldest, today)} dias de atraso. Apenas recomendar análise, sem encaminhamento.`,
+            getNextCollectionDate(
+              oldest.collectionStartDate && oldest.dueDate < oldest.collectionStartDate
+                ? oldest.collectionStartDate
+                : shiftDate(oldest.dueDate, cfg.externalReviewDays),
+              e,
+            ),
+            `${overdue.length} parcelas vencidas; ${daysOverdue(oldest, today)} dias de atraso. Avaliar cobrança externa ou manter o acompanhamento a cada ${cfg.alternateBusinessDays} dias úteis. O encaminhamento exige confirmação.`,
             'high',
           );
       }

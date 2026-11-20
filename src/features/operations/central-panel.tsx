@@ -184,6 +184,16 @@ export default function CentralPanel({
                       </button>
                     )
                   )}
+                  {task.kind === 'external_review' && (
+                    <button
+                      className={styles.primary}
+                      onClick={() =>
+                        openTask('external', task, 'Confirmar encaminhamento à cobrança externa')
+                      }
+                    >
+                      Encaminhar à cobrança externa
+                    </button>
+                  )}
                   {task.installmentId && (
                     <button
                       className={op.actionPayment}
