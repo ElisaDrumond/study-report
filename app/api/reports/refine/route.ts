@@ -1,9 +1,9 @@
-import { buildStoredReport } from '../../../../lib/operational-reports';
 import { NextResponse } from 'next/server';
-import { isDate } from '../../../../lib/rules';
-import { refinementStyles } from '../../../../lib/refinement';
-import { refineReport, RefinementError } from '../../../../lib/openai-refine';
 import { isLocalRequest } from '../../../../lib/local-request';
+import { RefinementError,refineReport } from '../../../../lib/openai-refine';
+import { buildStoredReport } from '../../../../lib/operational-reports';
+import { refinementStyles } from '../../../../lib/refinement';
+import { isDate } from '../../../../lib/rules';
 export const runtime = 'nodejs';
 let busy = false;
 export async function POST(request: Request) {

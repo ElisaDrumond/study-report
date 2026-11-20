@@ -1,9 +1,9 @@
 import OpenAI from 'openai';
 import {
-  applyEditorialPlan,
-  editorialSchema,
-  reportSections,
-  type RefinementStyle,
+applyEditorialPlan,
+editorialSchema,
+reportSections,
+type RefinementStyle,
 } from './refinement';
 import type { buildReport } from './rules';
 

@@ -1,4 +1,4 @@
-import { buildReport } from './rules';
+import type { buildReport } from './rules';
 
 export const refinementStyles = ['formal', 'executive', 'detailed'] as const;
 export type RefinementStyle = (typeof refinementStyles)[number];

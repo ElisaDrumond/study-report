@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getEntries, saveEntry } from '../../../lib/db';
-import { cleanEntry, validateEntry } from '../../../lib/rules';
+import { getEntries,saveEntry } from '../../../lib/db';
+import { cleanEntry,validateEntry } from '../../../lib/rules';
 export const runtime = 'nodejs';
 export async function POST(request: Request) {
   try {

@@ -1,4 +1,4 @@
-import type { Action, Category, Entry, Status, Task } from './types';
+import type { Action,Category,Entry,Status,Task } from './types';
 export const categories: Record<Category, string> = {
   current: 'Cobrança do mês vigente',
   email: 'E-mail respondido',
