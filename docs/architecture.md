@@ -88,6 +88,13 @@ system's separate reconciliation task. Upon verification, collection scheduling
 starts at the verification date; older suggested task dates are not backfilled.
 No customer communication is automatic.
 
+## UI workflow
+
+The reviewed installment schedule is confirmed inside the application's
+standard modal rather than the browser's native confirmation prompt.
+Operator defaults to Elisa Anjo. Task deferrals are recorded as operational
+activities on the date of the human action, with audit metadata preserved.
+
 ## Existing contracts to protect
 
 - Preserve the SQLite schema and the migration/backup behavior.

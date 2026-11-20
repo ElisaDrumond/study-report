@@ -3,6 +3,7 @@ import { CheckCircle2, X } from 'lucide-react';
 import op from '../../../app/operations.module.css';
 import styles from '../../../app/page.module.css';
 import { shiftDate } from '../../../lib/business-calendar';
+import { buildInstallmentPlan } from '../../../lib/installment-plan';
 import { negotiationLabels, outstandingCents } from '../../../lib/collection-status';
 import Field from '../../components/ui/form-field';
 import { amountInput, channelLabels, money } from './operations-presenters';
@@ -153,6 +154,36 @@ export default function OperationDialog({
                   </div>
                   <Field label="Observações" wide>
                     <textarea name="notes" defaultValue={activeDialog.client?.notes} />
+                  </Field>
+                </>
+              )}
+              {activeDialog.type === 'generate_installments' && activeDialog.client?.paymentTerms && (
+                <>
+                  {(() => {
+                    try {
+                      const preview = buildInstallmentPlan(activeDialog.client.paymentTerms!);
+                      return (
+                        <div className={`${styles.note} ${styles.wide}`}>
+                          <strong>{preview.length} parcelas · Total {money(
+                            preview.reduce((sum, installment) => sum + installment.amountCents, 0),
+                          )}</strong>
+                          <p>
+                            Primeiro vencimento: {preview[0].dueDate} · Último vencimento:
+                            {' '}{preview[preview.length - 1].dueDate}
+                          </p>
+                          <p>Confira os valores e datas antes de confirmar. Nada será enviado automaticamente.</p>
+                        </div>
+                      );
+                    } catch (error) {
+                      return <p className={styles.alert}>{error instanceof Error ? error.message : 'Contrato incompleto'}</p>;
+                    }
+                  })()}
+                  <Field label="Identificador do contrato" wide>
+                    <input
+                      name="reference"
+                      required
+                      defaultValue={activeDialog.client.crmRef || activeDialog.client.paymentTerms.purchaseDescription}
+                    />
                   </Field>
                 </>
               )}
@@ -487,7 +518,6 @@ export default function OperationDialog({
                 'save_installment',
                 'save_calendar',
                 'save_settings',
-                'defer_task',
               ].includes(activeDialog.type) && (
                 <>
                   <Field label="Responsável pelo registro" wide>
@@ -505,7 +535,7 @@ export default function OperationDialog({
                   >
                     <textarea name="notes" required={activeDialog.type === 'external'} />
                   </Field>
-                  {['confirm_payment', 'verify_installment', 'service', 'external', 'save_negotiation'].includes(
+                  {['generate_installments', 'confirm_payment', 'verify_installment', 'service', 'external', 'save_negotiation'].includes(
                     activeDialog.type,
                   ) && (
                     <label className={`${op.checkbox} ${styles.wide}`}>

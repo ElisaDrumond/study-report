@@ -21,6 +21,13 @@ export function handleTaskCommand(type: string, context: OperationContext) {
     };
     put(database, 'op_pending', task);
     audit(database, 'pending', task.id, old, task, task.deferReason);
+    activity({
+      clientId: old.clientId,
+      installmentId: old.installmentId,
+      taskId: old.id,
+      action: 'task_deferred',
+      result: `Tarefa adiada para ${due}, com justificativa registrada.`,
+    });
   } else if (
     [
       'complete_task',

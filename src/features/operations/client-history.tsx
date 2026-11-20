@@ -22,7 +22,6 @@ type Props = Pick<
   | 'today'
   | 'setSelectedClient'
   | 'setDialog'
-  | 'run'
 > & { clientId: string };
 export default function ClientHistory({
   clientId,
@@ -32,7 +31,6 @@ export default function ClientHistory({
   today,
   setSelectedClient,
   setDialog,
-  run,
 }: Props) {
   const id = clientId;
   const client = operationsState.clients.find((c) => c.id === id);
@@ -153,15 +151,7 @@ export default function ClientHistory({
                       window.alert('Informe a referência CRM ou a descrição da compra.');
                       return;
                     }
-                    if (!window.confirm(
-                      `Gerar ${planned.length} parcelas para ${client.name}, total de ${money(total)}? Elas entrarão na régua de cobrança, sem enviar mensagens automaticamente.`,
-                    )) return;
-                    run({
-                      type: 'generate_installments',
-                      clientId: client.id,
-                      reference,
-                      confirmed: true,
-                    });
+                    openClient('generate_installments', 'Revisar e gerar parcelas', client);
                   }}
                 >
                   Confirmar geração das parcelas

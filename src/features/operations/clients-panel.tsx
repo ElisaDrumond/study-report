@@ -19,7 +19,6 @@ type Props = Pick<
   | 'openClient'
   | 'setHistoryClient'
   | 'today'
-  | 'historyClient'
 >;
 export default function ClientsPanel({
   busy,
@@ -32,7 +31,6 @@ export default function ClientsPanel({
   openClient,
   setHistoryClient,
   today,
-  historyClient,
 }: Props) {
   const downloadClients = () => {
     const csv = exportClientsCsv(operationsState.clients, operationsState.installments);

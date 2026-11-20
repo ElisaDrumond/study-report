@@ -119,7 +119,6 @@ export default function Operations({ view }: { view: OperationsView }) {
           openClient={openClient}
           setHistoryClient={setHistoryClient}
           today={today}
-          historyClient={historyClient}
         />
       )}
 
@@ -143,7 +142,6 @@ export default function Operations({ view }: { view: OperationsView }) {
           today={today}
           setSelectedClient={setSelectedClient}
           setDialog={setDialog}
-          run={run}
         />
       )}
 

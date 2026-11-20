@@ -29,7 +29,7 @@ export function useDashboard() {
     [toast, setToast] = useState('');
   const [query, setQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
-  const [dateFilter, setDateFilter] = useState<'all' | 'selected' | 'range'>('all');
+  const [dateFilter, setDateFilter] = useState<'all' | 'selected' | 'range'>('selected');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [editing, setEditing] = useState<Entry | null>(null),
