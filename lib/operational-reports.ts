@@ -1,14 +1,14 @@
-import { daysOverdue, isOverdue, outstandingCents } from './collection-status';
 import type { OperationSnapshot } from './collection-types';
 import { getEntries, getTasks } from './db';
 import { processOperations } from './operations-store';
-import { buildReport, fmt } from './rules';
+import { buildReport } from './rules';
 import type { Action, Entry, Status, Task } from './types';
 import { operationalActionLabel } from './operational-action-labels';
+import { isReportableOperationalActivity } from './operational-activity-scope';
 export function operationalActivityEntries(state: OperationSnapshot): Entry[] {
   const names = new Map(state.clients.map((client) => [client.id, client.name]));
   return state.activities
-    .filter((a) => a.source !== 'legacy')
+    .filter((a) => a.source !== 'legacy' && isReportableOperationalActivity(a))
     .map((a) => {
       const p = state.installments.find((p) => p.id === a.installmentId);
       let category: Entry['category'] = 'other',
@@ -83,8 +83,6 @@ export function operationalActivityEntries(state: OperationSnapshot): Entry[] {
     });
 }
 
-const money = (c: number) =>
-  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'USD' }).format(c / 100);
 export function buildStoredReport(date: string, extra = '', nextSteps = '') {
   const state = processOperations();
   return buildOperationalReport(date, state, getEntries(), getTasks(), extra, nextSteps);
@@ -97,7 +95,6 @@ export function buildOperationalReport(
   extra = '',
   nextSteps = '',
 ) {
-  const names = new Map(state.clients.map((c) => [c.id, c.name]));
   const entries = legacy.map((r) => {
     const matches = r.clientId
       ? state.clients.filter((client) => client.id === r.clientId)
@@ -123,35 +120,15 @@ export function buildOperationalReport(
     };
   });
   const operations = operationalActivityEntries(state).filter((record) => record.date === date);
-  const result = buildReport(date, [...entries, ...operations], tasks, extra, nextSteps);
-  const sections: string[] = [];
-  let number = [...result.body.matchAll(/^\d+\. /gm)].length;
-  const overdue = state.installments.filter((p) => isOverdue(p, state.today));
-  if (overdue.length)
-    sections.push(
-      `${++number}. Carteira operacional em acompanhamento (posição atual)\n\n` +
-        overdue
-          .map(
-            (p) =>
-              `- ${names.get(p.clientId)} — ${p.reference}, parcela ${p.number}; vencimento ${fmt(p.dueDate)}; ${daysOverdue(p, state.today)} dias corridos em atraso; saldo registrado ${money(outstandingCents(p))}${p.scheduledDate ? `; pagamento previsto ${fmt(p.scheduledDate)} (não confirmado)` : ''}.`,
-          )
-          .join('\n'),
-    );
-  const pending = state.pending.filter((t) => t.status === 'open' || t.status === 'deferred');
-  if (pending.length)
-    sections.push(
-      `${++number}. Pendências operacionais sugeridas (não contabilizadas como realizadas)\n\n` +
-        pending
-          .map(
-            (t) =>
-              `- ${names.get(t.clientId)} — ${t.recommendation}; prazo ${fmt(t.dueDate)}; ${t.status === 'deferred' ? 'adiada' : 'aberta'}${t.deferReason ? `; justificativa: ${t.deferReason}` : ''}.`,
-          )
-          .join('\n'),
-    );
-  if (sections.length)
-    result.body = result.body.replace(
-      'Permaneço à disposição para eventuais orientações.',
-      sections.join('\n\n') + '\n\nPermaneço à disposição para eventuais orientações.',
-    );
+  const result = buildReport(
+    date,
+    [...entries.filter((item) => item.date === date), ...operations],
+    tasks.filter((task) => task.date === date),
+    extra,
+    nextSteps,
+  );
+  // The professional report describes work performed on the selected date.
+  // Portfolio exposure and automatically generated pending tasks belong in
+  // the Central, not in the daily activity report.
   return result;
 }

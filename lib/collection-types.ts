@@ -66,6 +66,8 @@ export type OperationActivity = {
   taskId: string;
   amountCents: number;
   source?: 'legacy';
+  /** Work contributes to daily reports; administrative is preserved only in history/audit. */
+  reportScope?: 'work' | 'administrative';
 };
 export type PendingTask = {
   id: string;

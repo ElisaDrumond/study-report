@@ -139,6 +139,17 @@ workflow. Historical receipts are retained in installment audit trails only,
 Payment dates cannot be in the future. Generation still refuses clients with
 existing installments, to avoid duplicates.
 
+## New contracts versus backfilled history
+
+Newly generated installments whose due date has not passed are eligible for
+normal pre-due reminders (D-15 and due-day) without an initial historical
+payment verification. Past-due installments still require explicit review.
+The first working day after verified overdue creates the existing block
+recommendation (never a silent actual block). Alternate collections start
+after the window, not on the same day as its follow-up.
+Old backdated receipts are excluded from reporting and from creating
+post-payment CRM/receipt tasks that would misrepresent past work.
+
 ## Existing contracts to protect
 
 - Preserve the SQLite schema and the migration/backup behavior.

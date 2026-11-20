@@ -48,7 +48,7 @@ export default function ActivitiesPanel({
         <div>
           <p className={styles.eyebrow}>CADASTRO</p>
           <h2>Histórico de atividades</h2>
-          <p className={styles.subhead}>Ações reais da Central aparecem aqui automaticamente. Sugestões de tarefas não são atividades realizadas.</p>
+          <p className={styles.subhead}>Somente trabalho efetivamente realizado. Atualizações de cadastro, conferência inicial e adiamentos permanecem no histórico do cliente.</p>
         </div>
         <button className={styles.primary} onClick={() => setEditing(freshEntry(date))}>
           <Plus size={17} /> Novo registro

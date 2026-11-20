@@ -28,7 +28,7 @@ export function handleInstallmentCommand(type: string, context: OperationContext
         dueDate: draft.dueDate,
         paidDate: '',
         paidCents: 0,
-        verificationStatus: 'unverified',
+        verificationStatus: draft.dueDate < today ? 'unverified' : 'verified',
         status: 'open',
         chargesCents: 0,
         chargeStatus: 'verify',
