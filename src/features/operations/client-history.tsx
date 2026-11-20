@@ -160,25 +160,7 @@ export default function ClientHistory({
                 </p>
                 <button
                   className={styles.primary}
-                  onClick={() => {
-                    const reference = client.crmRef || client.paymentTerms?.purchaseDescription;
-                    if (!reference) {
-                      window.alert('Informe a referência CRM ou a descrição da compra.');
-                      return;
-                    }
-                    if (
-                      !window.confirm(
-                        `Gerar ${planned.length} parcelas para ${client.name}, total de ${money(total)}? Elas entrarão na régua de cobrança, sem enviar mensagens automaticamente.`,
-                      )
-                    )
-                      return;
-                    run({
-                      type: 'generate_installments',
-                      clientId: client.id,
-                      reference,
-                      confirmed: true,
-                    });
-                  }}
+                  onClick={() => openClient('generate_installments', 'Revisar e gerar parcelas', client)}
                 >
                   Confirmar geração das parcelas
                 </button>
