@@ -3,6 +3,7 @@ import { CheckCircle2, X } from 'lucide-react';
 import op from '../../../app/operations.module.css';
 import styles from '../../../app/page.module.css';
 import { shiftDate } from '../../../lib/business-calendar';
+import { buildInstallmentPlan } from '../../../lib/installment-plan';
 import { negotiationLabels, outstandingCents } from '../../../lib/collection-status';
 import Field from '../../components/ui/form-field';
 import { amountInput, channelLabels, money } from './operations-presenters';
@@ -39,6 +40,7 @@ export default function OperationDialog({
   error,
 }: Props) {
   if (!activeDialog) return null;
+  const paymentTerms = activeDialog.client?.paymentTerms;
   return (
     <div className={styles.modalBackdrop}>
       <div className={styles.modal} role="dialog" aria-modal="true" aria-label={activeDialog.title}>
@@ -108,7 +110,7 @@ export default function OperationDialog({
                       defaultValue={activeDialog.client?.paymentTerms?.installmentCount ?? ''}
                     />
                   </Field>
-                  <Field label="Valor de cada parcela (R$)">
+                  <Field label="Valor de cada parcela (US$)">
                     <input
                       name="installmentAmount"
                       inputMode="decimal"
@@ -158,6 +160,36 @@ export default function OperationDialog({
                   </Field>
                 </>
               )}
+              {activeDialog.type === 'generate_installments' && paymentTerms && (
+                <>
+                  {(() => {
+                    try {
+                      const preview = buildInstallmentPlan(paymentTerms);
+                      return (
+                        <div className={`${styles.note} ${styles.wide}`}>
+                          <strong>{preview.length} parcelas · Total {money(
+                            preview.reduce((sum, installment) => sum + installment.amountCents, 0),
+                          )}</strong>
+                          <p>
+                            Primeiro vencimento: {preview[0].dueDate} · Último vencimento:
+                            {' '}{preview[preview.length - 1].dueDate}
+                          </p>
+                          <p>Confira os valores e datas antes de confirmar. Nada será enviado automaticamente.</p>
+                        </div>
+                      );
+                    } catch (error) {
+                      return <p className={styles.alert}>{error instanceof Error ? error.message : 'Contrato incompleto'}</p>;
+                    }
+                  })()}
+                  <Field label="Identificador do contrato" wide>
+                    <input
+                      name="reference"
+                      required
+                      defaultValue={activeDialog.client?.crmRef || paymentTerms.purchaseDescription}
+                    />
+                  </Field>
+                </>
+              )}
               {activeDialog.type === 'save_installment' && (
                 <>
                   <Field label="Contrato / identificador">
@@ -177,7 +209,7 @@ export default function OperationDialog({
                       defaultValue={selectedInstallment?.number || 1}
                     />
                   </Field>
-                  <Field label="Valor original (R$)">
+                  <Field label="Valor original (US$)">
                     <input
                       name="amount"
                       inputMode="decimal"
@@ -195,7 +227,7 @@ export default function OperationDialog({
                       defaultValue={selectedInstallment?.dueDate || today}
                     />
                   </Field>
-                  <Field label="Encargos registrados (R$)">
+                  <Field label="Encargos registrados (US$)">
                     <input
                       name="charges"
                       inputMode="decimal"
@@ -231,6 +263,13 @@ export default function OperationDialog({
                   />
                 </Field>
               )}
+              {activeDialog.type === 'verify_installment' && (
+                <div className={`${styles.note} ${styles.wide}`}>
+                  Confirme apenas após conferir no sistema financeiro da Study que esta parcela
+                  permanece em aberto. Isso NÃO é a tarefa de conciliação da Study e não confirma pagamento.
+                  Se já foi paga, use a ação Confirmar pagamento da parcela.
+                </div>
+              )}
               {activeDialog.type === 'confirm_payment' && (
                 <>
                   <div className={`${styles.note} ${styles.wide}`}>
@@ -238,7 +277,7 @@ export default function OperationDialog({
                     esta parcela. Saldo em aberto:{' '}
                     {money(selectedInstallment ? outstandingCents(selectedInstallment) : 0)}.
                   </div>
-                  <Field label="Valor recebido nesta confirmação (R$)">
+                  <Field label="Valor recebido nesta confirmação (US$)">
                     <input
                       name="amount"
                       inputMode="decimal"
@@ -465,7 +504,7 @@ export default function OperationDialog({
                           <option value="applied">Aplicado manualmente conforme contrato</option>
                         </select>
                       </Field>
-                      <Field label="Encargo efetivamente registrado (R$)">
+                      <Field label="Encargo efetivamente registrado (US$)">
                         <input name="charges" required defaultValue="0.00" inputMode="decimal" />
                       </Field>
                     </>
@@ -482,11 +521,12 @@ export default function OperationDialog({
                 'save_installment',
                 'save_calendar',
                 'save_settings',
-                'defer_task',
               ].includes(activeDialog.type) && (
                 <>
                   <Field label="Responsável pelo registro" wide>
-                    <input name="responsible" required autoComplete="name" />
+                    <select name="responsible" required defaultValue="Elisa Anjo">
+                      <option value="Elisa Anjo">Elisa Anjo</option>
+                    </select>
                   </Field>
                   <Field
                     label={
@@ -498,7 +538,7 @@ export default function OperationDialog({
                   >
                     <textarea name="notes" required={activeDialog.type === 'external'} />
                   </Field>
-                  {['confirm_payment', 'service', 'external', 'save_negotiation'].includes(
+                  {['generate_installments', 'confirm_payment', 'verify_installment', 'service', 'external', 'save_negotiation'].includes(
                     activeDialog.type,
                   ) && (
                     <label className={`${op.checkbox} ${styles.wide}`}>

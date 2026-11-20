@@ -1,6 +1,6 @@
 import type { Client, Installment } from './collection-types';
 import { outstandingCents } from './collection-status';
-import { parseBRLToCents } from './money-input';
+import { parseUSDToCents } from './money-input';
 
 export type ImportedClientRow = {
   id: string;
@@ -22,11 +22,11 @@ const header = [
   'Status financeiro',
   'Status atendimento',
   'Total de parcelas',
-  'Saldo registrado (BRL)',
+  'Saldo registrado (USD)',
   'Observações',
   'O que comprou',
   'Quantidade de parcelas contratadas',
-  'Valor de cada parcela (R$)',
+  'Valor de cada parcela (USD)',
   'Periodicidade',
   'Dia do vencimento',
   'Primeiro vencimento',

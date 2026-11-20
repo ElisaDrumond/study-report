@@ -24,6 +24,7 @@ export const taskLabels: Record<string, string> = {
   crm: 'Atualizar CRM',
   management: 'Encaminhar caso para análise da gestão',
   external_review: 'Avaliar cobrança externa',
+  portfolio_review: 'Revisar parcela vencida após conferência inicial',
 };
 export function generateCollectionTasks(s: OperationSnapshot, today: string): PendingTask[] {
   if (!isDate(today)) throw Error('Data operacional inválida');
@@ -38,7 +39,9 @@ export function generateCollectionTasks(s: OperationSnapshot, today: string): Pe
     dueDate: string,
     reason: string,
     priority: PendingTask['priority'] = 'normal',
-  ) =>
+  ) => {
+    const installment = s.installments.find((item) => item.id === installmentId);
+    if (installment?.collectionStartDate && dueDate < installment.collectionStartDate) return;
     result.push({
       id: JSON.stringify([kind, clientId, installmentId, cycle]),
       clientId,
@@ -56,6 +59,7 @@ export function generateCollectionTasks(s: OperationSnapshot, today: string): Pe
       resolvedActivityId: '',
       createdAt: today,
     });
+  };
   for (const client of s.clients) {
     const external = client.financialStatus === 'external';
     const installments = s.installments.filter(
@@ -98,7 +102,11 @@ export function generateCollectionTasks(s: OperationSnapshot, today: string): Pe
       .sort((a, b) => b.occurredAt.localeCompare(a.occurredAt))[0];
     if (!external) {
       for (const p of installments) {
-        if (!isUnpaid(p)) continue;
+        if (!isUnpaid(p) || p.verificationStatus === 'unverified') continue;
+        if (p.collectionStartDate && isOverdue(p, today)) {
+          add(client.id, p.id, 'portfolio_review', p.collectionStartDate, p.collectionStartDate,
+            'Primeira verificação registrada. Avalie o histórico real antes de iniciar a cobrança.', 'high');
+        }
         const cycle = p.id;
         const first = nextBusinessDay(p.dueDate, e);
         const scheduled = p.scheduledDate && isDate(p.scheduledDate);

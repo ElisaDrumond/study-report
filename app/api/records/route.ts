@@ -2,10 +2,13 @@ import { NextResponse } from 'next/server';
 import { db, getEntries, saveEntry } from '../../../lib/db';
 import { read } from '../../../lib/database/operations-repository';
 import type { Client, Installment } from '../../../lib/collection-types';
+import { snapshot } from '../../../lib/database/operations-repository';
+import { operationalActivityEntries } from '../../../lib/operational-reports';
 import { cleanEntry, validateEntry } from '../../../lib/rules';
 export const runtime = 'nodejs';
 export async function GET() {
-  return NextResponse.json(getEntries());
+  const operational = operationalActivityEntries(snapshot(db()));
+  return NextResponse.json([...getEntries(), ...operational].sort((a, b) => b.date.localeCompare(a.date)));
 }
 export async function POST(request: Request) {
   try {

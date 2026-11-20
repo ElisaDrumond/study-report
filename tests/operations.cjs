@@ -145,6 +145,79 @@ test('migração de vínculo com clientes não apaga atividades legadas e é ide
   database.close();
 });
 
+test('parcelas importadas não disparam cobrança antes da verificação inicial', () => {
+  const database = memory(state({
+    installments: [installment({
+      dueDate: '2026-08-18',
+      verificationStatus: 'unverified',
+    })],
+  }));
+  let current = processOperations(database, '2026-11-20');
+  assert.equal(current.clients[0].financialStatus, 'verification_pending');
+  assert.equal(current.clients[0].serviceStatus, 'active');
+  assert.equal(current.pending.filter((task) => ['advance', 'initial', 'block', 'fine'].includes(task.kind)).length, 0);
+  assert.throws(() => mutateOperation({
+    type: 'verify_installment', installmentId: 'p', responsible: 'Elisa Anjo',
+  }, database, '2026-11-20'), /Confirmação manual/);
+  current = mutateOperation({
+    type: 'verify_installment', installmentId: 'p',
+    confirmed: true, responsible: 'Elisa Anjo',
+  }, database, '2026-11-20');
+  assert.equal(current.clients[0].financialStatus, 'overdue');
+  assert.equal(current.installments[0].collectionStartDate, '2026-11-20');
+  assert(current.pending.some((task) => task.kind === 'portfolio_review' && task.dueDate === '2026-11-20'));
+  assert(!current.pending.some((task) => task.kind === 'initial' && task.dueDate < '2026-11-20'));
+  assert(current.activities.some((activity) => activity.action === 'payment_status_checked'));
+  database.close();
+});
+
+test('pagamento confirmado não equivale à conciliação da Study', () => {
+  const database = memory(state({
+    installments: [installment({ verificationStatus: 'unverified' })],
+  }));
+  const result = payment(database);
+  assert.equal(result.installments[0].status, 'paid');
+  assert.equal(result.installments[0].verificationStatus, 'verified');
+  const activity = result.activities.find((item) => item.action === 'payment_confirmed');
+  assert.equal(activity.category, 'payment');
+  assert.match(activity.result, /Pagamento confirmado no controle local/);
+  database.close();
+});
+
+test('atividade operacional aparece na lista sem duplicar o relatório', () => {
+  const { operationalActivityEntries } = require('../.test-build/operational-reports');
+  const stateWithActivity = state({
+    activities: [{
+      id: 'event-1',
+      clientId: 'c',
+      installmentId: 'p',
+      action: 'contact',
+      category: 'operational',
+      status: 'recorded',
+      occurredAt: '2026-11-20T15:00:00.000Z',
+      date: '2026-11-20',
+      channel: 'whatsapp',
+      notes: '',
+      result: 'WhatsApp enviado ao cliente',
+      responsible: 'Elisa Anjo',
+      contact: true,
+      taskId: '',
+      amountCents: 0,
+    }],
+  });
+  const entries = operationalActivityEntries(stateWithActivity);
+  assert.equal(entries.length, 1);
+  assert.equal(entries[0].source, 'operational');
+  assert.equal(entries[0].clientId, 'c');
+  assert.equal(entries[0].installmentId, 'p');
+  assert.equal(entries[0].action, 'whatsapp_sent');
+  const result = buildOperationalReport('2026-11-20', {
+    ...stateWithActivity,
+    today: '2026-11-20',
+  }, [], [], '', '');
+  assert.equal(result.dailyActions, 1);
+});
+
 test('calendário: sexta-feira, feriado segunda, recesso e sábado útil', () => {
   assert.equal(
     calendar.operationToday('America/Sao_Paulo', new Date('2026-11-21T01:00:00Z')),

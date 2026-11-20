@@ -41,6 +41,12 @@ export default function Dashboard() {
     setQuery,
     categoryFilter,
     setCategoryFilter,
+    dateFilter,
+    setDateFilter,
+    fromDate,
+    setFromDate,
+    toDate,
+    setToDate,
     downloadBackup,
     importBackup,
     filtered,
@@ -136,6 +142,12 @@ export default function Dashboard() {
                 setQuery={setQuery}
                 categoryFilter={categoryFilter}
                 setCategoryFilter={setCategoryFilter}
+                dateFilter={dateFilter}
+                setDateFilter={setDateFilter}
+                fromDate={fromDate}
+                setFromDate={setFromDate}
+                toDate={toDate}
+                setToDate={setToDate}
                 downloadBackup={downloadBackup}
                 importBackup={importBackup}
                 filtered={filtered}

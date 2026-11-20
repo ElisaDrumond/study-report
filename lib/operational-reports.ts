@@ -4,8 +4,75 @@ import { getEntries, getTasks } from './db';
 import { processOperations } from './operations-store';
 import { buildReport, fmt } from './rules';
 import type { Action, Entry, Status, Task } from './types';
+export function operationalActivityEntries(state: OperationSnapshot): Entry[] {
+  const names = new Map(state.clients.map((client) => [client.id, client.name]));
+  return state.activities
+    .filter((a) => a.source !== 'legacy')
+    .map((a) => {
+      const p = state.installments.find((p) => p.id === a.installmentId);
+      let category: Entry['category'] = 'other',
+        action: Action = 'other_action',
+        status: Status = 'none';
+      if (a.action === 'payment_confirmed') {
+        category = 'payment';
+        action = 'payment_checked';
+        status = a.status === 'paid' ? 'payment_confirmed' : 'closed';
+      } else if (a.contact) {
+        category = 'current';
+        action = (
+          {
+            email: 'email_sent',
+            whatsapp: 'whatsapp_sent',
+            both: 'both_sent',
+            phone: 'call',
+            system: 'followup',
+            other: 'other_action',
+          } as Record<string, Action>
+        )[a.channel];
+        status = a.status === 'awaiting_reply' ? 'awaiting_reply' : 'monitoring';
+      } else if (
+        a.category === 'renegotiation' &&
+        [
+          'proposal_received',
+          'awaiting_approval',
+          'approved',
+          'not_approved',
+          'agreement_active',
+        ].includes(a.status)
+      ) {
+        category = 'renegotiation';
+        action = 'followup';
+        status = a.status as Status;
+      }
+      return {
+        id: a.id,
+        clientId: a.clientId,
+        installmentId: a.installmentId,
+        source: 'operational' as const,
+        name: names.get(a.clientId) || 'Cliente arquivado',
+        category,
+        action,
+        status,
+        date: a.date,
+        days: null,
+        lastContact: a.contact ? a.date : '',
+        scheduled: '',
+        notes: [
+          p ? `${p.reference}, parcela ${p.number}.` : '',
+          a.result,
+          a.notes,
+          `Responsável: ${a.responsible}.`,
+        ]
+          .filter(Boolean)
+          .join(' '),
+        createdAt: a.occurredAt,
+        updatedAt: a.occurredAt,
+      };
+    });
+}
+
 const money = (c: number) =>
-  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(c / 100);
+  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'USD' }).format(c / 100);
 export function buildStoredReport(date: string, extra = '', nextSteps = '') {
   const state = processOperations();
   return buildOperationalReport(date, state, getEntries(), getTasks(), extra, nextSteps);
@@ -43,67 +110,7 @@ export function buildOperationalReport(
         : r.notes,
     };
   });
-  const operations: Entry[] = state.activities
-    .filter((a) => a.date === date && a.source !== 'legacy')
-    .map((a) => {
-      const p = state.installments.find((p) => p.id === a.installmentId);
-      let category: Entry['category'] = 'other',
-        action: Action = 'other_action',
-        status: Status = 'none';
-      if (a.action === 'payment_confirmed') {
-        category = a.status === 'paid' ? 'payment' : 'conciliation';
-        action = a.status === 'paid' ? 'payment_checked' : 'conciliation_done';
-        status = a.status === 'paid' ? 'payment_confirmed' : 'monitoring';
-      } else if (a.contact) {
-        category = 'current';
-        action = (
-          {
-            email: 'email_sent',
-            whatsapp: 'whatsapp_sent',
-            both: 'both_sent',
-            phone: 'call',
-            system: 'followup',
-            other: 'other_action',
-          } as Record<string, Action>
-        )[a.channel];
-        status = a.status === 'awaiting_reply' ? 'awaiting_reply' : 'monitoring';
-      } else if (
-        a.category === 'renegotiation' &&
-        [
-          'proposal_received',
-          'awaiting_approval',
-          'approved',
-          'not_approved',
-          'agreement_active',
-        ].includes(a.status)
-      ) {
-        category = 'renegotiation';
-        action = 'followup';
-        status = a.status as Status;
-      }
-      return {
-        id: a.id,
-        clientId: a.clientId,
-        name: names.get(a.clientId) || 'Cliente arquivado',
-        category,
-        action,
-        status,
-        date: a.date,
-        days: null,
-        lastContact: a.contact ? a.date : '',
-        scheduled: '',
-        notes: [
-          p ? `${p.reference}, parcela ${p.number}.` : '',
-          a.result,
-          a.notes,
-          `Responsável: ${a.responsible}.`,
-        ]
-          .filter(Boolean)
-          .join(' '),
-        createdAt: a.occurredAt,
-        updatedAt: a.occurredAt,
-      };
-    });
+  const operations = operationalActivityEntries(state).filter((record) => record.date === date);
   const result = buildReport(date, [...entries, ...operations], tasks, extra, nextSteps);
   const sections: string[] = [];
   let number = [...result.body.matchAll(/^\d+\. /gm)].length;

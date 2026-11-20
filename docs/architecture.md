@@ -68,6 +68,40 @@ API validates the relationship. Selecting a parcel records the context of an act
 it does **not** mark a payment as received, change a balance, or apply penalties.
 Receipts remain explicit operational confirmations.
 
+## Currency and initial verification terminology
+
+All customer balances, installment values and CSV amounts are in **USD** (US$).
+Values in cents are preserved as-is: this does not perform exchange-rate
+conversion or rewrite existing ledger amounts. "Conciliação" remains the
+separate task performed in the Study system; initial local payment-status
+verification is not counted as that Study task.
+
+## Initial verification of imported receivables
+
+New installments start with `verificationStatus: unverified`. Previously generated
+installments with no payments are marked as unverified by an idempotent migration
+when their generation audit record is available. No prior contact, unpaid status,
+late-payment action or service block is inferred merely from importing a schedule.
+A human can mark the installment as still unpaid, or separately confirm its
+receipt (including partial payment). This verification is **not** the Study
+system's separate reconciliation task. Upon verification, collection scheduling
+starts at the verification date; older suggested task dates are not backfilled.
+No customer communication is automatic.
+
+## UI workflow
+
+The reviewed installment schedule is confirmed inside the application's
+standard modal rather than the browser's native confirmation prompt.
+Operator defaults to Elisa Anjo. Task deferrals are recorded as operational
+activities on the date of the human action, with audit metadata preserved.
+
+## Currency
+
+The entire operational financial workflow uses USD. Amounts are stored in integer
+cents, displayed as US$ and exported as USD. This is a currency-label correction,
+**not** an exchange-rate conversion. Reconciliation is solely a separately recorded
+task in Study's official system and is never inferred from payment-status verification.
+
 ## Existing contracts to protect
 
 - Preserve the SQLite schema and the migration/backup behavior.

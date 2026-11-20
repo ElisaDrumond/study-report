@@ -76,6 +76,16 @@ test('CSV de clientes inclui valor de cada parcela e o converte em centavos', ()
   assert.equal(row.installmentAmountCents, '35000');
 });
 
+test('exportação de clientes usa cabeçalhos em USD', () => {
+  const exported = exportClientsCsv([{
+    id: 'usd-1', name: 'Cliente USD', crmRef: '', notes: '',
+    financialStatus: 'current', serviceStatus: 'active',
+    createdAt: '2026-11-20T00:00:00Z',
+  }], []);
+  assert.match(exported, /Saldo registrado \(USD\)/);
+  assert.match(exported, /Valor de cada parcela \(USD\)/);
+});
+
 test('CSV simples permite importar nomes de uma lista externa', () => {
   assert.deepEqual(parseClientsCsv('Nome;Referência CRM\nAna;CRM-A\nBruna;CRM-B'), [
     { id: '', name: 'Ana', crmRef: 'CRM-A', notes: '' },

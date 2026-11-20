@@ -22,7 +22,6 @@ type Props = Pick<
   | 'today'
   | 'setSelectedClient'
   | 'setDialog'
-  | 'run'
 > & { clientId: string };
 export default function ClientHistory({
   clientId,
@@ -32,7 +31,6 @@ export default function ClientHistory({
   today,
   setSelectedClient,
   setDialog,
-  run,
 }: Props) {
   const id = clientId;
   const client = operationsState.clients.find((c) => c.id === id);
@@ -239,7 +237,9 @@ export default function ClientHistory({
                       ? 'Pagamento parcial'
                       : p.status === 'cancelled'
                         ? 'Cancelada'
-                        : isOverdue(p, today)
+                        : p.verificationStatus === 'unverified'
+                          ? 'Situação a verificar'
+                          : isOverdue(p, today)
                           ? 'Vencida'
                           : 'Em aberto'}
                   {p.scheduledDate && p.status !== 'paid' && (
@@ -250,6 +250,11 @@ export default function ClientHistory({
                 </td>
                 <td>
                   <div className={op.actions}>
+                    {p.verificationStatus === 'unverified' && p.status !== 'cancelled' && (
+                      <button className={styles.secondary} onClick={() => openClient('verify_installment', 'Verificar situação da parcela', client, p)}>
+                        Confirmar que segue em aberto
+                      </button>
+                    )}
                     <button
                       className={styles.secondary}
                       disabled={p.status === 'paid'}

@@ -37,6 +37,7 @@ export type Entry = {
   id: string;
   clientId?: string;
   installmentId?: string;
+  source?: 'operational';
   name: string;
   category: Category;
   action: Action;

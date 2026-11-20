@@ -17,7 +17,7 @@ const entry = (overrides = {}) => ({
   days: null,
   lastContact: '',
   scheduled: '',
-  notes: 'Valor R$ 1.234,56',
+  notes: 'Valor US$ 1.234,56',
   ...overrides,
 });
 const rows = [

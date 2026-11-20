@@ -5,7 +5,6 @@ import op from '../../../app/operations.module.css';
 import styles from '../../../app/page.module.css';
 import { isOverdue, outstandingCents } from '../../../lib/collection-status';
 import Field from '../../components/ui/form-field';
-import ClientHistory from './client-history';
 import { financialLabels, money, serviceLabels } from './operations-presenters';
 import type { OperationsController } from './use-operations';
 type Props = Pick<
@@ -20,7 +19,6 @@ type Props = Pick<
   | 'openClient'
   | 'setHistoryClient'
   | 'today'
-  | 'historyClient'
 >;
 export default function ClientsPanel({
   busy,
@@ -33,7 +31,6 @@ export default function ClientsPanel({
   openClient,
   setHistoryClient,
   today,
-  historyClient,
 }: Props) {
   const downloadClients = () => {
     const csv = exportClientsCsv(operationsState.clients, operationsState.installments);
@@ -179,6 +176,9 @@ export default function ClientsPanel({
                           .filter((p) => p.status !== 'cancelled')
                           .reduce((n, p) => n + outstandingCents(p), 0),
                       )}
+                      {c.financialStatus === 'verification_pending' && (
+                        <small className={op.detail}>Saldo contratual ainda não verificado</small>
+                      )}
                     </td>
                     <td>
                       <button
@@ -198,18 +198,6 @@ export default function ClientsPanel({
           </table>
         </div>
       </section>
-      {!historyClient && selectClient && (
-        <ClientHistory
-          clientId={selectClient.id}
-          operationsState={operationsState}
-          setHistoryClient={setHistoryClient}
-          openClient={openClient}
-          today={today}
-          setSelectedClient={setSelectedClient}
-          setDialog={setDialog}
-          run={run}
-        />
-      )}
     </>
   );
 }

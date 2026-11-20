@@ -6,7 +6,7 @@ export type Client = {
   name: string;
   crmRef: string;
   paymentTerms?: ClientPaymentTerms;
-  financialStatus: 'current' | 'overdue' | 'external';
+  financialStatus: 'current' | 'overdue' | 'external' | 'verification_pending';
   serviceStatus: ServiceStatus;
   notes: string;
   createdAt: string;
@@ -22,6 +22,8 @@ export type Installment = {
   dueDate: string;
   paidDate: string;
   paidCents: number;
+  verificationStatus?: 'unverified' | 'verified';
+  collectionStartDate?: string;
   status: 'open' | 'partial' | 'paid' | 'cancelled';
   chargesCents: number;
   chargeStatus: 'verify' | 'applied' | 'not_applicable';
