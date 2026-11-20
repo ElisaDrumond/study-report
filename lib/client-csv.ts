@@ -129,7 +129,11 @@ export function parseClientsCsv(source: string): ImportedClientRow[] {
     'quantidade de parcelas',
     'parcelas contratadas',
   );
-  const amountColumn = find('valor de cada parcela (r$)', 'valor da parcela', 'valor por parcela');
+  const amountColumn = find(
+    'valor de cada parcela (usd)',
+    'valor da parcela',
+    'valor por parcela',
+  );
   const frequencyColumn = find('periodicidade', 'frequencia');
   const dueDayColumn = find('dia do vencimento', 'dia habitual do vencimento');
   const firstDueDateColumn = find('primeiro vencimento', 'data do primeiro vencimento');
@@ -151,7 +155,7 @@ export function parseClientsCsv(source: string): ImportedClientRow[] {
       ...(field(descriptionColumn) ? { purchaseDescription: field(descriptionColumn) } : {}),
       ...(field(countColumn) ? { installmentCount: field(countColumn) } : {}),
       ...(field(amountColumn)
-        ? { installmentAmountCents: String(parseBRLToCents(field(amountColumn))) }
+        ? { installmentAmountCents: String(parseUSDToCents(field(amountColumn))) }
         : {}),
       ...(field(frequencyColumn) ? { frequency: field(frequencyColumn) } : {}),
       ...(field(dueDayColumn) ? { dueDay: field(dueDayColumn) } : {}),
