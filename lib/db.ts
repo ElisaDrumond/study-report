@@ -2,7 +2,7 @@ import Database from 'better-sqlite3';
 import fs from 'node:fs';
 import path from 'node:path';
 import { migrateOperations } from './operations-migration';
-import type { Entry,SavedReport,Task } from './types';
+import type { Entry, SavedReport, Task } from './types';
 let instance: Database.Database | undefined;
 export function db() {
   if (!instance) {

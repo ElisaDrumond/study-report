@@ -1,10 +1,5 @@
 'use client';
-import type {
-Client,
-Installment,
-Negotiation,
-PendingTask
-} from '../../../lib/collection-types';
+import type { Client, Installment, Negotiation, PendingTask } from '../../../lib/collection-types';
 export type Dialog = {
   type: string;
   title: string;

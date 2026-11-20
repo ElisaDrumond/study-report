@@ -2,6 +2,7 @@
 
 - Leia a arquitetura e os arquivos do domínio antes de editar. O App Router permanece em `app/`.
 - Escreva código legível, com uma instrução por linha. Use Prettier e ESLint.
+- Use nomes semânticos para estado, parâmetros e entidades do domínio. Evite `s`, `d`, `p`, `n` e abreviações obscuras em contratos entre módulos e componentes; índices locais em loops curtos são aceitáveis.
 - Preserve TypeScript strict; não esconda falhas com `any`, `@ts-ignore` ou desativações de lint.
 - Separe apresentação, coordenação de operações, regras puras e persistência SQLite.
 - Evite componentes monolíticos e abstrações artificiais; reutilize componentes existentes.
@@ -11,6 +12,7 @@
 - Nunca automatize mensagens, bloqueios ou encaminhamentos sem solicitação explícita.
 - Crie ou atualize testes quando houver mudança de comportamento; teste com SQLite isolado.
 - Execute `npm.cmd run check`, `npm.cmd test` e `npm.cmd run build` antes de concluir.
+- Preserve a saída legível dos testes com o reporter de `scripts/spaced-reporter.mjs`; não reduza o feedback de erros.
 - Para validar fluxos locais após o build, use `node scripts/verify-local.cjs`; não insira dados fictícios no banco real.
 - Documente decisões de arquitetura e limitações relevantes no README ou em `docs/`.
 - Mantenha refatorações dentro do escopo. Separe formatação de mudanças estruturais em commits.

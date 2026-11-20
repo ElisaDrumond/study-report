@@ -1,55 +1,49 @@
 'use client';
 import {
-Activity,
-BookOpen,
-CalendarDays,
-CheckCircle2,
-ClipboardList,
-FileText,
-LayoutDashboard,
-Users
+  Activity,
+  BookOpen,
+  CalendarDays,
+  CheckCircle2,
+  ClipboardList,
+  FileText,
+  LayoutDashboard,
+  Users,
 } from 'lucide-react';
-import { useCallback,useEffect,useMemo,useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { RefinementStyle } from '../../../lib/refinement';
-import {
-categories,
-cleanEntry,
-fmt,
-follow,
-validateEntry
-} from '../../../lib/rules';
-import type { Entry,SavedReport,Task } from '../../../lib/types';
+import { categories, cleanEntry, fmt, follow, validateEntry } from '../../../lib/rules';
+import type { Entry, SavedReport, Task } from '../../../lib/types';
 import type { Tab } from './dashboard-model';
-import { route,today } from './dashboard-model';
-export function useDashboard(){
-const [tab, setTab] = useState<Tab>('central');
-const [date, setDate] = useState(today());
-const [records, setRecords] = useState<Entry[]>([]),
+import { route, today } from './dashboard-model';
+export function useDashboard() {
+  const [tab, setTab] = useState<Tab>('central');
+  const [date, setDate] = useState(today());
+  const [records, setRecords] = useState<Entry[]>([]),
     [tasks, setTasks] = useState<Task[]>([]),
     [history, setHistory] = useState<SavedReport[]>([]);
-const [loading, setLoading] = useState(true),
+  const [loading, setLoading] = useState(true),
     [saving, setSaving] = useState(false),
     [toast, setToast] = useState('');
-const [query, setQuery] = useState(''),
-    [categoryFilter, setCategoryFilter] = useState('all');
-const [editing, setEditing] = useState<Entry | null>(null),
+  const [query, setQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [editing, setEditing] = useState<Entry | null>(null),
     [editingTask, setEditingTask] = useState<Task | null>(null);
-const [subject, setSubject] = useState(''),
+  const [subject, setSubject] = useState(''),
     [body, setBody] = useState(''),
     [nextSteps, setNextSteps] = useState(''),
     [extra, setExtra] = useState('');
-const [generated, setGenerated] = useState(false),
+  const [generated, setGenerated] = useState(false),
     [excluded, setExcluded] = useState(0),
     [navOpen, setNavOpen] = useState(false);
-const [refinementStyle, setRefinementStyle] = useState<RefinementStyle>('formal');
-const [refinedBody, setRefinedBody] = useState(''),
+  const [refinementStyle, setRefinementStyle] = useState<RefinementStyle>('formal');
+  const [refinedBody, setRefinedBody] = useState(''),
     [originalBody, setOriginalBody] = useState(''),
     [refinedAt, setRefinedAt] = useState('');
-const [refining, setRefining] = useState(false),
-    [refineError, setRefineError] = useState('');
-const [chosen, setChosen] = useState<'original' | 'refined'>('original');
-const [generatedDate, setGeneratedDate] = useState('');
-async function refine() {
+  const [refining, setRefining] = useState(false);
+  const [refineError, setRefineError] = useState('');
+  const [chosen, setChosen] = useState<'original' | 'refined'>('original');
+  const [generatedDate, setGeneratedDate] = useState('');
+  async function refine() {
     setRefining(true);
     setRefineError('');
     try {
@@ -71,8 +65,8 @@ async function refine() {
       setRefining(false);
     }
   }
-const notice = (msg: string) => setToast(msg);
-const refresh = useCallback(async () => {
+  const notice = (msg: string) => setToast(msg);
+  const refresh = useCallback(async () => {
     try {
       const [r, t, h] = await Promise.all([route('records'), route('tasks'), route('reports')]);
       setRecords(r);
@@ -84,10 +78,10 @@ const refresh = useCallback(async () => {
       setLoading(false);
     }
   }, []);
-useEffect(() => {
+  useEffect(() => {
     refresh();
   }, [refresh]);
-const filtered = useMemo(
+  const filtered = useMemo(
     () =>
       records
         .filter(
@@ -102,13 +96,13 @@ const filtered = useMemo(
         .sort((a, b) => b.date.localeCompare(a.date)),
     [records, categoryFilter, query],
   );
-const selected = records.filter((r) => r.date === date && r.action !== 'none');
-const unique = new Set(selected.map((r) => r.name.trim().toLocaleLowerCase('pt-BR'))).size;
-const followRecords = records.filter((r) => follow(r.category));
-const followUnique = new Set(followRecords.map((r) => r.name.toLocaleLowerCase('pt-BR'))).size;
-const upcoming = records.filter((r) => r.scheduled && r.status === 'payment_scheduled');
-const invalid = records.filter((r) => validateEntry(r).length > 0).length;
-const stats = [
+  const selected = records.filter((r) => r.date === date && r.action !== 'none');
+  const unique = new Set(selected.map((r) => r.name.trim().toLocaleLowerCase('pt-BR'))).size;
+  const followRecords = records.filter((r) => follow(r.category));
+  const followUnique = new Set(followRecords.map((r) => r.name.toLocaleLowerCase('pt-BR'))).size;
+  const upcoming = records.filter((r) => r.scheduled && r.status === 'payment_scheduled');
+  const invalid = records.filter((r) => validateEntry(r).length > 0).length;
+  const stats = [
     {
       label: 'Ações no dia',
       value: selected.length,
@@ -138,7 +132,7 @@ const stats = [
       tone: 'green',
     },
   ];
-async function saveRecord() {
+  async function saveRecord() {
     if (!editing) return;
     const r = cleanEntry(editing);
     const errors = validateEntry(r);
@@ -158,7 +152,7 @@ async function saveRecord() {
       setSaving(false);
     }
   }
-async function removeRecord(id: string) {
+  async function removeRecord(id: string) {
     if (!confirm('Excluir permanentemente este registro?')) return;
     try {
       await route('records', 'DELETE', { id });
@@ -168,7 +162,7 @@ async function removeRecord(id: string) {
       notice((e as Error).message);
     }
   }
-async function saveDaily() {
+  async function saveDaily() {
     if (!editingTask) return;
     setSaving(true);
     try {
@@ -182,7 +176,7 @@ async function saveDaily() {
       setSaving(false);
     }
   }
-async function removeTask(id: string) {
+  async function removeTask(id: string) {
     if (!confirm('Excluir esta demanda?')) return;
     try {
       await route('tasks', 'DELETE', { id });
@@ -191,7 +185,7 @@ async function removeTask(id: string) {
       notice((e as Error).message);
     }
   }
-async function generate() {
+  async function generate() {
     try {
       const result = await route('reports', 'POST', { date, nextSteps, extra });
       setSubject(result.subject);
@@ -210,7 +204,7 @@ async function generate() {
       notice((e as Error).message);
     }
   }
-async function saveGenerated() {
+  async function saveGenerated() {
     if (!generated || !body.trim()) return;
     setSaving(true);
     try {
@@ -232,7 +226,7 @@ async function saveGenerated() {
       setSaving(false);
     }
   }
-async function copy() {
+  async function copy() {
     if (!body) {
       notice('Gere um relatório primeiro.');
       return;
@@ -244,7 +238,7 @@ async function copy() {
       notice('Não foi possível copiar automaticamente. Selecione o texto manualmente.');
     }
   }
-async function downloadBackup() {
+  async function downloadBackup() {
     try {
       const operations = await route('operations');
       const blob = new Blob(
@@ -274,7 +268,7 @@ async function downloadBackup() {
       notice((e as Error).message);
     }
   }
-async function importBackup(file: File) {
+  async function importBackup(file: File) {
     try {
       const data = JSON.parse(await file.text());
       if (!Array.isArray(data.records)) throw Error('Formato de backup inválido');
@@ -293,7 +287,7 @@ async function importBackup(file: File) {
       notice((e as Error).message);
     }
   }
-const navigation: [Tab, string, typeof LayoutDashboard][] = [
+  const navigation: [Tab, string, typeof LayoutDashboard][] = [
     ['central', 'Central Operacional', LayoutDashboard],
     ['clients', 'Clientes e parcelas', Users],
     ['calendar', 'Calendário Operacional', CalendarDays],
@@ -303,6 +297,67 @@ const navigation: [Tab, string, typeof LayoutDashboard][] = [
     ['reports', 'Gerar report', FileText],
     ['history', 'Histórico', BookOpen],
   ];
-return {navOpen,navigation,tab,setTab,setNavOpen,refining,date,setDate,setGenerated,loading,stats,records,upcoming,generate,invalid,setEditing,query,setQuery,categoryFilter,setCategoryFilter,downloadBackup,importBackup,filtered,removeRecord,setEditingTask,tasks,removeTask,extra,setExtra,nextSteps,setNextSteps,refinementStyle,setRefinementStyle,setRefinedBody,setChosen,generated,saving,refine,refinedBody,refineError,excluded,subject,setSubject,body,setBody,chosen,copy,saveGenerated,history,setOriginalBody,setRefinedAt,setGeneratedDate,setRefineError,toast,setToast,editing,saveRecord,editingTask,saveDaily};
+  return {
+    navOpen,
+    navigation,
+    tab,
+    setTab,
+    setNavOpen,
+    refining,
+    date,
+    setDate,
+    setGenerated,
+    loading,
+    stats,
+    records,
+    upcoming,
+    generate,
+    invalid,
+    setEditing,
+    query,
+    setQuery,
+    categoryFilter,
+    setCategoryFilter,
+    downloadBackup,
+    importBackup,
+    filtered,
+    removeRecord,
+    setEditingTask,
+    tasks,
+    removeTask,
+    extra,
+    setExtra,
+    nextSteps,
+    setNextSteps,
+    refinementStyle,
+    setRefinementStyle,
+    setRefinedBody,
+    setChosen,
+    generated,
+    saving,
+    refine,
+    refinedBody,
+    refineError,
+    excluded,
+    subject,
+    setSubject,
+    body,
+    setBody,
+    chosen,
+    copy,
+    saveGenerated,
+    history,
+    setOriginalBody,
+    setRefinedAt,
+    setGeneratedDate,
+    setRefineError,
+    toast,
+    setToast,
+    editing,
+    saveRecord,
+    editingTask,
+    saveDaily,
+  };
 }
-export type DashboardController=ReturnType<typeof useDashboard>;
+
+export type DashboardController = ReturnType<typeof useDashboard>;

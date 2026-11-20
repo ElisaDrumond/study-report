@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { isLocalRequest } from '../../../../lib/local-request';
-import { RefinementError,refineReport } from '../../../../lib/openai-refine';
+import { RefinementError, refineReport } from '../../../../lib/openai-refine';
 import { buildStoredReport } from '../../../../lib/operational-reports';
 import { refinementStyles } from '../../../../lib/refinement';
 import { isDate } from '../../../../lib/rules';
