@@ -193,7 +193,9 @@ export function useOperations(view: 'central' | 'clients' | 'calendar') {
         command.paymentTerms = {
           purchaseDescription: String(data.get('purchaseDescription') ?? ''),
           installmentCount: String(data.get('installmentCount') ?? ''),
-          installmentAmountCents: data.get('installmentAmount') ? cents(data.get('installmentAmount')) : '',
+          installmentAmountCents: data.get('installmentAmount')
+            ? cents(data.get('installmentAmount'))
+            : '',
           frequency: String(data.get('frequency') ?? 'monthly'),
           dueDay: String(data.get('dueDay') ?? ''),
           firstDueDate: String(data.get('firstDueDate') ?? ''),

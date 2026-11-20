@@ -74,13 +74,19 @@ export default function ClientHistory({
             <p>
               {client.paymentTerms.installmentCount ?? 'Quantidade não informada'} parcela(s)
               {' · '}
-              {({
-                monthly: 'Mensal',
-                biweekly: 'A cada 15 dias',
-                weekly: 'Semanal',
-                one_time: 'Pagamento único',
-              } as const)[client.paymentTerms.frequency]}
-              {client.paymentTerms.installmentAmountCents ? ` · ${money(client.paymentTerms.installmentAmountCents)} por parcela` : ''}
+              {
+                (
+                  {
+                    monthly: 'Mensal',
+                    biweekly: 'A cada 15 dias',
+                    weekly: 'Semanal',
+                    one_time: 'Pagamento único',
+                  } as const
+                )[client.paymentTerms.frequency]
+              }
+              {client.paymentTerms.installmentAmountCents
+                ? ` · ${money(client.paymentTerms.installmentAmountCents)} por parcela`
+                : ''}
               {client.paymentTerms.dueDay
                 ? ` · Vencimento habitual: dia ${client.paymentTerms.dueDay}`
                 : ''}
@@ -88,7 +94,9 @@ export default function ClientHistory({
                 ? ` · Primeiro vencimento: ${fmt(client.paymentTerms.firstDueDate)}`
                 : ''}
             </p>
-            <small>Condições cadastradas; parcelas e pagamentos são controlados separadamente.</small>
+            <small>
+              Condições cadastradas; parcelas e pagamentos são controlados separadamente.
+            </small>
           </div>
         </div>
       )}
@@ -136,14 +144,21 @@ export default function ClientHistory({
             const total = planned.reduce((sum, installment) => sum + installment.amountCents, 0);
             return (
               <div>
-                <strong>Prévia: {planned.length} parcelas · Total {money(total)}</strong>
+                <strong>
+                  Prévia: {planned.length} parcelas · Total {money(total)}
+                </strong>
                 <p>
-                  Primeira: {fmt(planned[0].dueDate)} · Última: {fmt(planned[planned.length - 1].dueDate)}
+                  Primeira: {fmt(planned[0].dueDate)} · Última:{' '}
+                  {fmt(planned[planned.length - 1].dueDate)}
                 </p>
                 <p>
-                  {planned.slice(0, 3).map((item) =>
-                    `#${item.number}: ${fmt(item.dueDate)} (${money(item.amountCents)})`,
-                  ).join(' | ')}
+                  {planned
+                    .slice(0, 3)
+                    .map(
+                      (item) =>
+                        `#${item.number}: ${fmt(item.dueDate)} (${money(item.amountCents)})`,
+                    )
+                    .join(' | ')}
                 </p>
                 <button
                   className={styles.primary}
@@ -153,9 +168,12 @@ export default function ClientHistory({
                       window.alert('Informe a referência CRM ou a descrição da compra.');
                       return;
                     }
-                    if (!window.confirm(
-                      `Gerar ${planned.length} parcelas para ${client.name}, total de ${money(total)}? Elas entrarão na régua de cobrança, sem enviar mensagens automaticamente.`,
-                    )) return;
+                    if (
+                      !window.confirm(
+                        `Gerar ${planned.length} parcelas para ${client.name}, total de ${money(total)}? Elas entrarão na régua de cobrança, sem enviar mensagens automaticamente.`,
+                      )
+                    )
+                      return;
                     run({
                       type: 'generate_installments',
                       clientId: client.id,

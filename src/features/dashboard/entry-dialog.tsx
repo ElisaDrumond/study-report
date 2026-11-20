@@ -17,7 +17,15 @@ type Props = Pick<
   DashboardController,
   'setEditing' | 'records' | 'editing' | 'saving' | 'saveRecord'
 > & { clients: Client[]; installments: Installment[] };
-export default function EntryDialog({ setEditing, records, editing, saving, saveRecord, clients, installments }: Props) {
+export default function EntryDialog({
+  setEditing,
+  records,
+  editing,
+  saving,
+  saveRecord,
+  clients,
+  installments,
+}: Props) {
   if (!editing) return null;
   return (
     <div
@@ -55,7 +63,10 @@ export default function EntryDialog({ setEditing, records, editing, saving, save
                   ...editing,
                   name,
                   clientId: matches.length === 1 ? matches[0].id : '',
-                  installmentId: matches.length === 1 && matches[0].id === editing.clientId ? editing.installmentId : '',
+                  installmentId:
+                    matches.length === 1 && matches[0].id === editing.clientId
+                      ? editing.installmentId
+                      : '',
                 });
               }}
               placeholder="Digite para buscar um cliente cadastrado"
@@ -84,7 +95,8 @@ export default function EntryDialog({ setEditing, records, editing, saving, save
                   .sort((first, second) => first.number - second.number)
                   .map((installment) => (
                     <option key={installment.id} value={installment.id}>
-                      {installment.reference} · parcela {installment.number} · vencimento {installment.dueDate}
+                      {installment.reference} · parcela {installment.number} · vencimento{' '}
+                      {installment.dueDate}
                     </option>
                   ))}
               </select>

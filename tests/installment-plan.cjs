@@ -11,10 +11,14 @@ test('vencimentos mensais preservam dia do contrato mesmo após fevereiro', () =
     dueDay: 31,
     firstDueDate: '2027-01-31',
   });
-  assert.deepEqual(rows.map((row) => row.dueDate), [
-    '2027-01-31', '2027-02-28', '2027-03-31', '2027-04-30',
-  ]);
-  assert.equal(rows.reduce((sum, row) => sum + row.amountCents, 0), 50000);
+  assert.deepEqual(
+    rows.map((row) => row.dueDate),
+    ['2027-01-31', '2027-02-28', '2027-03-31', '2027-04-30'],
+  );
+  assert.equal(
+    rows.reduce((sum, row) => sum + row.amountCents, 0),
+    50000,
+  );
 });
 
 test('quinzenal são 15 dias corridos', () => {
@@ -26,18 +30,23 @@ test('quinzenal são 15 dias corridos', () => {
     dueDay: null,
     firstDueDate: '2026-12-05',
   });
-  assert.deepEqual(rows.map((row) => row.dueDate), [
-    '2026-12-05', '2026-12-20', '2027-01-04',
-  ]);
+  assert.deepEqual(
+    rows.map((row) => row.dueDate),
+    ['2026-12-05', '2026-12-20', '2027-01-04'],
+  );
 });
 
 test('sem valor ou vencimento não há parcelas', () => {
-  assert.throws(() => buildInstallmentPlan({
-    purchaseDescription: '',
-    installmentCount: 12,
-    installmentAmountCents: null,
-    frequency: 'monthly',
-    dueDay: 5,
-    firstDueDate: '2026-12-05',
-  }), /Informe quantidade/);
+  assert.throws(
+    () =>
+      buildInstallmentPlan({
+        purchaseDescription: '',
+        installmentCount: 12,
+        installmentAmountCents: null,
+        frequency: 'monthly',
+        dueDay: 5,
+        firstDueDate: '2026-12-05',
+      }),
+    /Informe quantidade/,
+  );
 });

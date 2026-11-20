@@ -113,9 +113,11 @@ export default function OperationDialog({
                       name="installmentAmount"
                       inputMode="decimal"
                       placeholder="Ex.: 350,00"
-                      defaultValue={activeDialog.client?.paymentTerms?.installmentAmountCents
-                        ? amountInput(activeDialog.client.paymentTerms.installmentAmountCents)
-                        : ''}
+                      defaultValue={
+                        activeDialog.client?.paymentTerms?.installmentAmountCents
+                          ? amountInput(activeDialog.client.paymentTerms.installmentAmountCents)
+                          : ''
+                      }
                     />
                   </Field>
                   <Field label="Periodicidade do pagamento">

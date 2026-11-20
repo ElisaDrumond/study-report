@@ -60,7 +60,13 @@ export function parsePaymentTerms(raw: unknown): ClientPaymentTerms | undefined 
     throw Error('Pagamento único deve ter apenas uma parcela');
   }
 
-  if (!description.trim() && installmentCount === null && installmentAmountCents === null && dueDay === null && !first) {
+  if (
+    !description.trim() &&
+    installmentCount === null &&
+    installmentAmountCents === null &&
+    dueDay === null &&
+    !first
+  ) {
     return undefined;
   }
 

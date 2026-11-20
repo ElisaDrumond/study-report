@@ -33,7 +33,14 @@ export function handleInstallmentCommand(type: string, context: OperationContext
         createdAt: now,
       };
       put(database, 'op_installments', installment, true);
-      audit(database, 'installment', installment.id, null, installment, 'Geração contratual confirmada manualmente');
+      audit(
+        database,
+        'installment',
+        installment.id,
+        null,
+        installment,
+        'Geração contratual confirmada manualmente',
+      );
     }
   } else if (type === 'save_installment') {
     const c = getClient(command.clientId),

@@ -44,7 +44,10 @@ export function exportClientsCsv(clients: Client[], installments: Installment[])
     const relevant = installments.filter(
       (installment) => installment.clientId === client.id && installment.status !== 'cancelled',
     );
-    const balance = relevant.reduce((total, installment) => total + outstandingCents(installment), 0);
+    const balance = relevant.reduce(
+      (total, installment) => total + outstandingCents(installment),
+      0,
+    );
     return [
       client.id,
       client.name,
@@ -56,7 +59,9 @@ export function exportClientsCsv(clients: Client[], installments: Installment[])
       client.notes,
       client.paymentTerms?.purchaseDescription ?? '',
       client.paymentTerms?.installmentCount ?? '',
-      client.paymentTerms?.installmentAmountCents ? (client.paymentTerms.installmentAmountCents / 100).toFixed(2).replace('.', ',') : '',
+      client.paymentTerms?.installmentAmountCents
+        ? (client.paymentTerms.installmentAmountCents / 100).toFixed(2).replace('.', ',')
+        : '',
       client.paymentTerms?.frequency ?? '',
       client.paymentTerms?.dueDay ?? '',
       client.paymentTerms?.firstDueDate ?? '',
@@ -68,9 +73,8 @@ export function exportClientsCsv(clients: Client[], installments: Installment[])
 function parseMatrix(text: string) {
   const source = text.replace(/^\uFEFF/, '').replace(/^sep=[;,]\r?\n/i, '');
   const firstLine = source.split(/\r?\n/, 1)[0];
-  const delimiter = (firstLine.match(/;/g) || []).length >= (firstLine.match(/,/g) || []).length
-    ? ';'
-    : ',';
+  const delimiter =
+    (firstLine.match(/;/g) || []).length >= (firstLine.match(/,/g) || []).length ? ';' : ',';
   const rows: string[][] = [];
   let row: string[] = [];
   let cell = '';
@@ -104,7 +108,11 @@ function parseMatrix(text: string) {
 }
 
 const normalized = (value: string) =>
-  value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLocaleLowerCase('pt-BR');
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLocaleLowerCase('pt-BR');
 
 export function parseClientsCsv(source: string): ImportedClientRow[] {
   const matrix = parseMatrix(source);
@@ -116,7 +124,11 @@ export function parseClientsCsv(source: string): ImportedClientRow[] {
   const crmColumn = find('referencia crm', 'crm', 'crmref');
   const notesColumn = find('observacoes', 'observacao', 'notas');
   const descriptionColumn = find('o que comprou', 'tipo de negocio', 'negocio contratado');
-  const countColumn = find('quantidade de parcelas contratadas', 'quantidade de parcelas', 'parcelas contratadas');
+  const countColumn = find(
+    'quantidade de parcelas contratadas',
+    'quantidade de parcelas',
+    'parcelas contratadas',
+  );
   const amountColumn = find('valor de cada parcela (r$)', 'valor da parcela', 'valor por parcela');
   const frequencyColumn = find('periodicidade', 'frequencia');
   const dueDayColumn = find('dia do vencimento', 'dia habitual do vencimento');
@@ -138,7 +150,9 @@ export function parseClientsCsv(source: string): ImportedClientRow[] {
       notes: field(notesColumn),
       ...(field(descriptionColumn) ? { purchaseDescription: field(descriptionColumn) } : {}),
       ...(field(countColumn) ? { installmentCount: field(countColumn) } : {}),
-      ...(field(amountColumn) ? { installmentAmountCents: String(parseBRLToCents(field(amountColumn))) } : {}),
+      ...(field(amountColumn)
+        ? { installmentAmountCents: String(parseBRLToCents(field(amountColumn))) }
+        : {}),
       ...(field(frequencyColumn) ? { frequency: field(frequencyColumn) } : {}),
       ...(field(dueDayColumn) ? { dueDay: field(dueDayColumn) } : {}),
       ...(field(firstDueDateColumn) ? { firstDueDate: field(firstDueDateColumn) } : {}),

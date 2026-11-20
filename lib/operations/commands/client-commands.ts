@@ -27,7 +27,9 @@ export function handleClientCommand(type: string, context: OperationContext) {
       const notes = text(row.notes ?? '', 'Observações');
       const byId = id ? currentClients.filter((client) => client.id === id) : [];
       if (id && byId.length === 0) {
-        throw Error(`Linha ${index + 2}: ID de cliente desconhecido; remova o ID para novo cadastro`);
+        throw Error(
+          `Linha ${index + 2}: ID de cliente desconhecido; remova o ID para novo cadastro`,
+        );
       }
       const byCrm = crmRef
         ? currentClients.filter((client) => normalize(client.crmRef) === normalize(crmRef))
@@ -59,9 +61,10 @@ export function handleClientCommand(type: string, context: OperationContext) {
             crmRef: crmRef || old.crmRef,
             notes: notes || old.notes,
             paymentTerms: mergePaymentTerms(old.paymentTerms, row),
-            legacyNames: old.name === name
-              ? old.legacyNames
-              : [...new Set([old.name, ...(old.legacyNames || [])])],
+            legacyNames:
+              old.name === name
+                ? old.legacyNames
+                : [...new Set([old.name, ...(old.legacyNames || [])])],
           }
         : {
             id: crypto.randomUUID(),
@@ -114,9 +117,10 @@ export function handleClientCommand(type: string, context: OperationContext) {
       name: text(command.name, 'Nome', true),
       crmRef: text(command.crmRef ?? '', 'Referência CRM'),
       notes: text(command.notes ?? '', 'Observações'),
-      paymentTerms: command.paymentTerms === undefined
-        ? old?.paymentTerms
-        : parsePaymentTerms(command.paymentTerms),
+      paymentTerms:
+        command.paymentTerms === undefined
+          ? old?.paymentTerms
+          : parsePaymentTerms(command.paymentTerms),
       financialStatus: old?.financialStatus || 'current',
       serviceStatus: old?.serviceStatus || 'active',
       createdAt: old?.createdAt || now,

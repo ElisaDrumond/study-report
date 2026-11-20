@@ -70,7 +70,14 @@ export function snapshot(database = defaultDb()): OperationSnapshot {
         id: 'legacy:' + r.id,
         source: 'legacy',
         clientId: matches[0].id,
-        installmentId: r.installmentId && read<{ id: string; clientId: string }>(database, 'op_installments').some((installment) => installment.id === r.installmentId && installment.clientId === matches[0].id) ? r.installmentId : '',
+        installmentId:
+          r.installmentId &&
+          read<{ id: string; clientId: string }>(database, 'op_installments').some(
+            (installment) =>
+              installment.id === r.installmentId && installment.clientId === matches[0].id,
+          )
+            ? r.installmentId
+            : '',
         category: r.category,
         action: r.action,
         status: r.status,

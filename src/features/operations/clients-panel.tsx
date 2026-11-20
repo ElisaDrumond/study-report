@@ -49,9 +49,12 @@ export default function ClientsPanel({
     try {
       if (file.size > 2_000_000) throw Error('Arquivo CSV muito grande (máximo 2 MB)');
       const rows = parseClientsCsv(await file.text());
-      if (!window.confirm(
-        `Importar ${rows.length} clientes? Cadastros existentes poderão receber atualizações de nome, CRM e observações. Parcelas e pagamentos serão preservados.`,
-      )) return;
+      if (
+        !window.confirm(
+          `Importar ${rows.length} clientes? Cadastros existentes poderão receber atualizações de nome, CRM e observações. Parcelas e pagamentos serão preservados.`,
+        )
+      )
+        return;
       await run({ type: 'import_clients', rows });
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Falha ao importar CSV');
@@ -67,7 +70,11 @@ export default function ClientsPanel({
             <h2>Clientes e parcelas</h2>
           </div>
           <div className={op.actions}>
-            <button className={styles.secondary} onClick={downloadClients} disabled={!operationsState.clients.length}>
+            <button
+              className={styles.secondary}
+              onClick={downloadClients}
+              disabled={!operationsState.clients.length}
+            >
               <Download size={16} /> Exportar clientes CSV
             </button>
             <label className={styles.secondary}>
