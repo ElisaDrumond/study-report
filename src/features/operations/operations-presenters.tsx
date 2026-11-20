@@ -43,6 +43,7 @@ export const activityLabels: Record<string, string> = {
   contact: 'Contato registrado',
   payment_confirmed: 'Pagamento confirmado',
   payment_scheduled: 'Agendamento registrado',
+  payment_status_checked: 'Verificação inicial da situação da parcela',
   payment_not_found: 'Pagamento não localizado',
   service_blocked: 'Bloqueio confirmado',
   service_unblocked: 'Desbloqueio confirmado',

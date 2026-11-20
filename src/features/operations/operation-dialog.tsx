@@ -229,6 +229,13 @@ export default function OperationDialog({
                   />
                 </Field>
               )}
+              {activeDialog.type === 'verify_installment' && (
+                <div className={`${styles.note} ${styles.wide}`}>
+                  Confirme apenas após conferir no sistema financeiro da Study que esta parcela
+                  permanece em aberto. Isso NÃO é a tarefa de conciliação da Study e não confirma pagamento.
+                  Se já foi paga, use a ação Confirmar pagamento da parcela.
+                </div>
+              )}
               {activeDialog.type === 'confirm_payment' && (
                 <>
                   <div className={`${styles.note} ${styles.wide}`}>
@@ -498,7 +505,7 @@ export default function OperationDialog({
                   >
                     <textarea name="notes" required={activeDialog.type === 'external'} />
                   </Field>
-                  {['confirm_payment', 'service', 'external', 'save_negotiation'].includes(
+                  {['confirm_payment', 'verify_installment', 'service', 'external', 'save_negotiation'].includes(
                     activeDialog.type,
                   ) && (
                     <label className={`${op.checkbox} ${styles.wide}`}>

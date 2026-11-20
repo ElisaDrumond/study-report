@@ -14,6 +14,7 @@ export const outstandingCents = (p: Installment) =>
   Math.max(0, p.amountCents + (p.chargeStatus === 'applied' ? p.chargesCents : 0) - p.paidCents);
 export const isUnpaid = (p: Installment) =>
   p.status !== 'cancelled' && p.status !== 'paid' && outstandingCents(p) > 0;
-export const isOverdue = (p: Installment, today: string) => isUnpaid(p) && p.dueDate < today;
+export const isOverdue = (p: Installment, today: string) =>
+  isUnpaid(p) && p.verificationStatus !== 'unverified' && p.dueDate < today;
 export const daysOverdue = (p: Installment, today: string) =>
   Math.max(0, calendarDaysBetween(p.dueDate, today));

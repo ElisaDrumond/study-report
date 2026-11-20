@@ -26,6 +26,7 @@ export function handleInstallmentCommand(type: string, context: OperationContext
         dueDate: draft.dueDate,
         paidDate: '',
         paidCents: 0,
+        verificationStatus: 'unverified',
         status: 'open',
         chargesCents: 0,
         chargeStatus: 'verify',
@@ -51,6 +52,8 @@ export function handleInstallmentCommand(type: string, context: OperationContext
       dueDate: date(command.dueDate),
       paidDate: old?.paidDate || '',
       paidCents: old?.paidCents || 0,
+      verificationStatus: old ? old.verificationStatus : 'unverified',
+      collectionStartDate: old?.collectionStartDate,
       status: old?.status || 'open',
       chargesCents: money(command.chargesCents ?? 0, 'Encargos'),
       chargeStatus: pick(
@@ -82,6 +85,29 @@ export function handleInstallmentCommand(type: string, context: OperationContext
       : 'Cadastro manual';
     put(database, 'op_installments', p);
     audit(database, 'installment', p.id, old ?? null, p, reason);
+  } else if (type === 'verify_installment') {
+    if (command.confirmed !== true) throw Error('Confirmação manual obrigatória');
+    const old = getInstallment(command.installmentId);
+    if (!isUnpaid(old)) throw Error('A parcela já está quitada ou cancelada');
+    if (old.verificationStatus === 'verified')
+      throw Error('Situação da parcela já foi verificada');
+    const updated: Installment = {
+      ...old,
+      verificationStatus: 'verified',
+      collectionStartDate: today,
+    };
+    put(database, 'op_installments', updated);
+    audit(database, 'installment', old.id, old, updated,
+      'Verificação inicial: parcela segue em aberto, segundo conferência humana');
+    activity({
+      clientId: old.clientId,
+      installmentId: old.id,
+      action: 'payment_status_checked',
+      category: 'verification',
+      status: 'recorded',
+      result: 'Situação da parcela conferida: pagamento ainda não confirmado. ' +
+        'A régua pode propor ações a partir desta verificação.',
+    });
   } else if (type === 'schedule_payment') {
     const old = getInstallment(command.installmentId);
     if (!isUnpaid(old)) throw Error('Parcela já quitada ou cancelada');
@@ -115,6 +141,7 @@ export function handleInstallmentCommand(type: string, context: OperationContext
       ...old,
       paidCents,
       paidDate,
+      verificationStatus: 'verified' as const,
       status: settled ? ('paid' as const) : ('partial' as const),
     };
     put(database, 'op_installments', p);

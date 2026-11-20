@@ -76,6 +76,18 @@ conversion or rewrite existing ledger amounts. "Conciliação" remains the
 separate task performed in the Study system; initial local payment-status
 verification is not counted as that Study task.
 
+## Initial verification of imported receivables
+
+New installments start with `verificationStatus: unverified`. Previously generated
+installments with no payments are marked as unverified by an idempotent migration
+when their generation audit record is available. No prior contact, unpaid status,
+late-payment action or service block is inferred merely from importing a schedule.
+A human can mark the installment as still unpaid, or separately confirm its
+receipt (including partial payment). This verification is **not** the Study
+system's separate reconciliation task. Upon verification, collection scheduling
+starts at the verification date; older suggested task dates are not backfilled.
+No customer communication is automatic.
+
 ## Existing contracts to protect
 
 - Preserve the SQLite schema and the migration/backup behavior.
