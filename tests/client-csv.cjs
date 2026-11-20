@@ -106,3 +106,18 @@ test('importação CSV rejeita cabeçalhos ausentes e registros incompletos', ()
   assert.throws(() => parseClientsCsv('CRM;Notas\n1;Oi'), /coluna Nome/);
   assert.throws(() => parseClientsCsv('Nome;CRM\n;1'), /nome inválido/);
 });
+
+test('importação de valores em USD reconhece cabeçalho exportado e não arredonda centavos', () => {
+  const csv = [
+    'Nome;Valor de cada parcela (USD)',
+    'Ana;450,25',
+    'Bruna;US$ 350.50',
+  ].join('\n');
+  const rows = parseClientsCsv(csv);
+  assert.equal(rows[0].installmentAmountCents, '45025');
+  assert.equal(rows[1].installmentAmountCents, '35050');
+  assert.throws(
+    () => parseClientsCsv('Nome;Valor de cada parcela (USD)\nAna;350,999'),
+    /Valor da parcela inválido/,
+  );
+});
