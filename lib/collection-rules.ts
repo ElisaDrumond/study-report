@@ -246,9 +246,8 @@ export function generateCollectionTasks(s: OperationSnapshot, today: string): Pe
           e,
         );
         if (today >= afterWindow) {
-          const base = lastContact && lastContact.date > afterWindow
-            ? lastContact.date
-            : afterWindow;
+          const base =
+            lastContact && lastContact.date > afterWindow ? lastContact.date : afterWindow;
           add(
             client.id,
             oldest.id,
@@ -285,7 +284,10 @@ export function generateCollectionTasks(s: OperationSnapshot, today: string): Pe
       }
     }
     const payments = s.activities.filter(
-      (a) => a.clientId === client.id && a.action === 'payment_confirmed' && isReportableOperationalActivity(a),
+      (a) =>
+        a.clientId === client.id &&
+        a.action === 'payment_confirmed' &&
+        isReportableOperationalActivity(a),
     );
     for (const payment of payments) {
       const installment = installments.find((p) => p.id === payment.installmentId);

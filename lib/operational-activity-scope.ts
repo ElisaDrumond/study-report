@@ -15,7 +15,9 @@ export function isReportableOperationalActivity(activity: OperationActivity): bo
     // Older records did not store paidDate separately. Recover it from the
     // original confirmation text; an earlier receipt entered today is history,
     // not today's receipt or CRM update.
-    const actualPaymentDate = /Data do pagamento:\s*(\d{4}-\d{2}-\d{2})\b/.exec(activity.result)?.[1];
+    const actualPaymentDate = /Data do pagamento:\s*(\d{4}-\d{2}-\d{2})\b/.exec(
+      activity.result,
+    )?.[1];
     if (actualPaymentDate && actualPaymentDate < activity.date) return false;
     return true;
   }
@@ -25,7 +27,8 @@ export function isReportableOperationalActivity(activity: OperationActivity): bo
     activity.action === 'task_deferred' ||
     activity.action === 'payment_scheduled' ||
     activity.action === 'portfolio_review'
-  ) return false;
+  )
+    return false;
 
   if (activity.contact) return true;
   if (activity.action.startsWith('negotiation_')) return true;

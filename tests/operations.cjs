@@ -407,24 +407,46 @@ test('histórico rejeita valores inconsistentes e mantém importação atômica'
 test('relatório diário ignora tarefas e manutenções da carteira antiga', () => {
   const { operationalActivityEntries } = require('../.test-build/operational-reports');
   const sample = (action, id, result = 'Manutenção interna') => ({
-    id, clientId: 'c', installmentId: 'p', action, result,
-    date: '2026-11-20', occurredAt: '2026-11-20T15:00:00Z',
-    status: 'recorded', category: 'operational', channel: 'system', notes: '',
-    responsible: 'Elisa Anjo', contact: false, taskId: '', amountCents: 0,
+    id,
+    clientId: 'c',
+    installmentId: 'p',
+    action,
+    result,
+    date: '2026-11-20',
+    occurredAt: '2026-11-20T15:00:00Z',
+    status: 'recorded',
+    category: 'operational',
+    channel: 'system',
+    notes: '',
+    responsible: 'Elisa Anjo',
+    contact: false,
+    taskId: '',
+    amountCents: 0,
   });
   const s = {
     ...state({ installments: [installment({ dueDate: '2026-08-18' })] }),
     today: '2026-11-20',
     pending: [
-      { id: 'pend-1', clientId: 'c', installmentId: 'p', status: 'deferred',
-        dueDate: '2026-11-23', deferReason: 'Importação antiga', recommendation: 'Atualizar CRM' },
+      {
+        id: 'pend-1',
+        clientId: 'c',
+        installmentId: 'p',
+        status: 'deferred',
+        dueDate: '2026-11-23',
+        deferReason: 'Importação antiga',
+        recommendation: 'Atualizar CRM',
+      },
     ],
     activities: [
       sample('payment_status_checked', 'v'),
       sample('task_deferred', 'd1'),
       sample('task_deferred', 'd2'),
       sample('portfolio_review', 'pr'),
-      sample('payment_confirmed', 'hist', 'Pagamento confirmado no controle local: US$ 450,00. Data do pagamento: 2026-08-18.'),
+      sample(
+        'payment_confirmed',
+        'hist',
+        'Pagamento confirmado no controle local: US$ 450,00. Data do pagamento: 2026-08-18.',
+      ),
     ],
   };
   assert.equal(operationalActivityEntries(s).length, 0);
@@ -442,9 +464,11 @@ test('relatório diário ignora tarefas e manutenções da carteira antiga', () 
 });
 
 test('pagamento passado lançado hoje não alimenta relatório nem cria tarefas administrativas', () => {
-  const database = memory(state({
-    installments: [installment({ dueDate: '2026-08-18', verificationStatus: 'unverified' })],
-  }));
+  const database = memory(
+    state({
+      installments: [installment({ dueDate: '2026-08-18', verificationStatus: 'unverified' })],
+    }),
+  );
   const next = payment(database, { paidDate: '2026-08-18' });
   const paymentEvent = next.activities.find((item) => item.action === 'payment_confirmed');
   assert.equal(paymentEvent.reportScope, 'administrative');
@@ -456,21 +480,35 @@ test('pagamento passado lançado hoje não alimenta relatório nem cria tarefas 
 });
 
 test('parcela futura recebe lembretes sem exigir verificação de pagamento histórico', () => {
-  const database = memory(state({
-    clients: [{
-      ...client,
-      paymentTerms: {
-        purchaseDescription: 'Curso', installmentCount: 1,
-        installmentAmountCents: 15000, frequency: 'monthly',
-        dueDay: 5, firstDueDate: '2026-12-05',
-      },
-    }],
-    installments: [],
-  }));
-  const updated = mutateOperation({
-    type: 'generate_installments', clientId: 'c', reference: 'Curso',
-    confirmed: true, historicalPayments: [],
-  }, database, '2026-11-20');
+  const database = memory(
+    state({
+      clients: [
+        {
+          ...client,
+          paymentTerms: {
+            purchaseDescription: 'Curso',
+            installmentCount: 1,
+            installmentAmountCents: 15000,
+            frequency: 'monthly',
+            dueDay: 5,
+            firstDueDate: '2026-12-05',
+          },
+        },
+      ],
+      installments: [],
+    }),
+  );
+  const updated = mutateOperation(
+    {
+      type: 'generate_installments',
+      clientId: 'c',
+      reference: 'Curso',
+      confirmed: true,
+      historicalPayments: [],
+    },
+    database,
+    '2026-11-20',
+  );
   assert.equal(updated.installments[0].verificationStatus, 'verified');
   assert(updated.pending.some((task) => task.kind === 'advance'));
   assert(updated.pending.some((task) => task.kind === 'due'));
