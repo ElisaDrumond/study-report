@@ -484,7 +484,9 @@ export default function OperationDialog({
               ].includes(activeDialog.type) && (
                 <>
                   <Field label="Responsável pelo registro" wide>
-                    <input name="responsible" required autoComplete="name" />
+                    <select name="responsible" required defaultValue="Elisa Anjo">
+                      <option value="Elisa Anjo">Elisa Anjo</option>
+                    </select>
                   </Field>
                   <Field
                     label={

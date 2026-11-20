@@ -29,6 +29,9 @@ export function useDashboard() {
     [toast, setToast] = useState('');
   const [query, setQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState<'all' | 'selected' | 'range'>('all');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
   const [editing, setEditing] = useState<Entry | null>(null),
     [editingTask, setEditingTask] = useState<Task | null>(null);
   const [subject, setSubject] = useState(''),
@@ -116,6 +119,11 @@ export function useDashboard() {
         .filter(
           (r) =>
             (categoryFilter === 'all' || r.category === categoryFilter) &&
+            (dateFilter === 'all' ||
+              (dateFilter === 'selected' && r.date === date) ||
+              (dateFilter === 'range' &&
+                (!fromDate || r.date >= fromDate) &&
+                (!toDate || r.date <= toDate))) &&
             (!query ||
               [r.name, r.notes, categories[r.category]]
                 .join(' ')
@@ -123,7 +131,7 @@ export function useDashboard() {
                 .includes(query.toLocaleLowerCase('pt-BR'))),
         )
         .sort((a, b) => b.date.localeCompare(a.date)),
-    [records, categoryFilter, query],
+    [records, categoryFilter, query, dateFilter, date, fromDate, toDate],
   );
   const selected = records.filter((r) => r.date === date && r.action !== 'none');
   const unique = new Set(selected.map((r) => r.name.trim().toLocaleLowerCase('pt-BR'))).size;
@@ -350,6 +358,12 @@ export function useDashboard() {
     setQuery,
     categoryFilter,
     setCategoryFilter,
+    dateFilter,
+    setDateFilter,
+    fromDate,
+    setFromDate,
+    toDate,
+    setToDate,
     downloadBackup,
     importBackup,
     filtered,

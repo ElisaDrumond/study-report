@@ -5,7 +5,6 @@ import op from '../../../app/operations.module.css';
 import styles from '../../../app/page.module.css';
 import { isOverdue, outstandingCents } from '../../../lib/collection-status';
 import Field from '../../components/ui/form-field';
-import ClientHistory from './client-history';
 import { financialLabels, money, serviceLabels } from './operations-presenters';
 import type { OperationsController } from './use-operations';
 type Props = Pick<
@@ -191,18 +190,6 @@ export default function ClientsPanel({
           </table>
         </div>
       </section>
-      {!historyClient && selectClient && (
-        <ClientHistory
-          clientId={selectClient.id}
-          operationsState={operationsState}
-          setHistoryClient={setHistoryClient}
-          openClient={openClient}
-          today={today}
-          setSelectedClient={setSelectedClient}
-          setDialog={setDialog}
-          run={run}
-        />
-      )}
     </>
   );
 }

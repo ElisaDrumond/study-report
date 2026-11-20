@@ -4,47 +4,10 @@ import { getEntries, getTasks } from './db';
 import { processOperations } from './operations-store';
 import { buildReport, fmt } from './rules';
 import type { Action, Entry, Status, Task } from './types';
-const money = (c: number) =>
-  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(c / 100);
-export function buildStoredReport(date: string, extra = '', nextSteps = '') {
-  const state = processOperations();
-  return buildOperationalReport(date, state, getEntries(), getTasks(), extra, nextSteps);
-}
-export function buildOperationalReport(
-  date: string,
-  state: OperationSnapshot & { today: string },
-  legacy: Entry[],
-  tasks: Task[],
-  extra = '',
-  nextSteps = '',
-) {
-  const names = new Map(state.clients.map((c) => [c.id, c.name]));
-  const entries = legacy.map((r) => {
-    const matches = r.clientId
-      ? state.clients.filter((client) => client.id === r.clientId)
-      : state.clients.filter((client) =>
-          [client.name, ...(client.legacyNames || [])].some(
-            (name) =>
-              name.trim().toLocaleLowerCase('pt-BR') === r.name.trim().toLocaleLowerCase('pt-BR'),
-          ),
-        );
-    if (matches.length !== 1) return { ...r, clientId: undefined };
-    const installment = r.installmentId
-      ? state.installments.find(
-          (candidate) => candidate.id === r.installmentId && candidate.clientId === matches[0].id,
-        )
-      : undefined;
-    return {
-      ...r,
-      clientId: matches[0].id,
-      name: matches[0].name,
-      notes: installment
-        ? `${installment.reference}, parcela ${installment.number}. ${r.notes}`.trim()
-        : r.notes,
-    };
-  });
-  const operations: Entry[] = state.activities
-    .filter((a) => a.date === date && a.source !== 'legacy')
+export function operationalActivityEntries(state: OperationSnapshot): Entry[] {
+  const names = new Map(state.clients.map((client) => [client.id, client.name]));
+  return state.activities
+    .filter((a) => a.source !== 'legacy')
     .map((a) => {
       const p = state.installments.find((p) => p.id === a.installmentId);
       let category: Entry['category'] = 'other',
@@ -84,6 +47,8 @@ export function buildOperationalReport(
       return {
         id: a.id,
         clientId: a.clientId,
+        installmentId: a.installmentId,
+        source: 'operational' as const,
         name: names.get(a.clientId) || 'Cliente arquivado',
         category,
         action,
@@ -104,6 +69,48 @@ export function buildOperationalReport(
         updatedAt: a.occurredAt,
       };
     });
+}
+
+const money = (c: number) =>
+  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'USD' }).format(c / 100);
+export function buildStoredReport(date: string, extra = '', nextSteps = '') {
+  const state = processOperations();
+  return buildOperationalReport(date, state, getEntries(), getTasks(), extra, nextSteps);
+}
+export function buildOperationalReport(
+  date: string,
+  state: OperationSnapshot & { today: string },
+  legacy: Entry[],
+  tasks: Task[],
+  extra = '',
+  nextSteps = '',
+) {
+  const names = new Map(state.clients.map((c) => [c.id, c.name]));
+  const entries = legacy.map((r) => {
+    const matches = r.clientId
+      ? state.clients.filter((client) => client.id === r.clientId)
+      : state.clients.filter((client) =>
+          [client.name, ...(client.legacyNames || [])].some(
+            (name) =>
+              name.trim().toLocaleLowerCase('pt-BR') === r.name.trim().toLocaleLowerCase('pt-BR'),
+          ),
+        );
+    if (matches.length !== 1) return { ...r, clientId: undefined };
+    const installment = r.installmentId
+      ? state.installments.find(
+          (candidate) => candidate.id === r.installmentId && candidate.clientId === matches[0].id,
+        )
+      : undefined;
+    return {
+      ...r,
+      clientId: matches[0].id,
+      name: matches[0].name,
+      notes: installment
+        ? `${installment.reference}, parcela ${installment.number}. ${r.notes}`.trim()
+        : r.notes,
+    };
+  });
+  const operations = operationalActivityEntries(state).filter((record) => record.date === date);
   const result = buildReport(date, [...entries, ...operations], tasks, extra, nextSteps);
   const sections: string[] = [];
   let number = [...result.body.matchAll(/^\d+\. /gm)].length;
