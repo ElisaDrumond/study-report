@@ -13,7 +13,7 @@ export function useOperations(view: 'central' | 'clients' | 'calendar') {
   const [dialog, setDialog] = useState<Dialog | null>(null),
     [historyClient, setHistoryClient] = useState(''),
     [selectedClient, setSelectedClient] = useState('');
-  const [range, setRange] = useState('today'),
+  const [range, setRange] = useState('week'),
     [priority, setPriority] = useState('all'),
     [category, setCategory] = useState('all'),
     [status, setStatus] = useState('pending'),
@@ -140,7 +140,7 @@ export function useOperations(view: 'central' | 'clients' | 'calendar') {
         (category === 'all' || t.kind === category) &&
         (range === 'all' ||
           (range === 'today' && t.dueDate <= today) ||
-          (range === 'week' && t.dueDate >= today && t.dueDate <= shiftDate(today, 7)) ||
+          (range === 'week' && t.dueDate <= shiftDate(today, 7)) ||
           (range === 'late' && t.dueDate < today)),
     )
     .sort(

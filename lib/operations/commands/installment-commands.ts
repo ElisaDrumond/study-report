@@ -174,6 +174,7 @@ export function handleInstallmentCommand(type: string, context: OperationContext
       action: 'payment_confirmed',
       category: 'payment',
       status: settled ? 'paid' : 'partial',
+      reportScope: paidDate < today ? 'administrative' : 'work',
       amountCents,
       result: `Pagamento confirmado no controle local: ${formatCurrency(amountCents)}. ${settled ? 'Parcela quitada.' : 'Pagamento parcial; saldo permanece aberto.'} Data do pagamento: ${paidDate}.`,
     });
