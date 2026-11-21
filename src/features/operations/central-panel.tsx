@@ -84,11 +84,65 @@ export default function CentralPanel({
             </button>
           </div>
         </div>
+        {(() => {
+          const installments = operationsState.installments;
+          const open = operationsState.pending.filter((task) =>
+            ['open', 'deferred'].includes(task.status),
+          );
+          const unverified = installments.filter((p) =>
+            p.verificationStatus === 'unverified' &&
+            p.status !== 'paid' &&
+            p.status !== 'cancelled' &&
+            outstandingCents(p) > 0,
+          );
+          const future = open.filter((task) => task.dueDate > today);
+          const pendingToday = open.filter((task) => task.dueDate <= today);
+          const withoutInstallments = operationsState.clients.filter((client) =>
+            !installments.some((installment) => installment.clientId === client.id),
+          );
+          return (
+            <div className={styles.note}>
+              <strong>Resumo da carteira</strong>
+              <p>
+                {operationsState.clients.length} cliente(s) · {installments.length} parcela(s) ·{' '}
+                {pendingToday.length} tarefa(s) vencida(s) ou para hoje ·{' '}
+                {future.length} tarefa(s) futura(s)
+              </p>
+              {withoutInstallments.length > 0 && (
+                <p>
+                  {withoutInstallments.length} cliente(s) ainda sem parcelas geradas. O cadastro do
+                  contrato sozinho não cria tarefas. Gere as parcelas pelo histórico do cliente.
+                </p>
+              )}
+              {unverified.length > 0 && (
+                <p>
+                  {unverified.length} parcela(s) aguardando conferência inicial. Elas não
+                  entram em cobrança até que sua situação seja confirmada.
+                </p>
+              )}
+              {future.length > 0 && pendingToday.length === 0 && (
+                <p>Há tarefas programadas, mas nenhuma está vencida ou prevista para hoje.</p>
+              )}
+              <div className={op.actions}>
+                {(withoutInstallments.length > 0 || unverified.length > 0) && (
+                  <button className={styles.secondary} onClick={() => onNavigate('clients')}>
+                    Conferir clientes e parcelas
+                  </button>
+                )}
+                {future.length > 0 && (
+                  <button className={styles.secondary} onClick={() => setRange('all')}>
+                    Ver todas as tarefas programadas
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })()}
         <div className={op.filters}>
           <Field label="Período">
             <select value={range} onChange={(e) => setRange(e.target.value)}>
               <option value="today">Hoje e vencidas</option>
-              <option value="week">Próximos 7 dias</option>
+              <option value="week">Vencidas e próximos 7 dias</option>
               <option value="late">Atrasadas</option>
               <option value="all">Todas as datas</option>
             </select>
@@ -291,8 +345,11 @@ export default function CentralPanel({
         {!queue.length && (
           <div className={styles.empty}>
             {operationsState.installments.length
-              ? 'Nenhuma tarefa para os filtros escolhidos.'
-              : 'Cadastre clientes e parcelas na área Clientes e parcelas para habilitar as recomendações. Os dados antigos continuam nas áreas existentes.'}
+              ? 'Não há tarefas neste período e com estes filtros. Selecione “Todas as datas” para conferir tarefas futuras ou “Todos” no status para visualizar tarefas já concluídas e encerradas.'
+              : operationsState.clients.length
+                ? 'Você já possui clientes cadastrados, mas ainda não há parcelas para a régua calcular. Abra o histórico de um cliente e confirme a geração das parcelas.'
+                : 'Cadastre um cliente e suas parcelas para habilitar as recomendações.'
+            }
           </div>
         )}
       </section>
