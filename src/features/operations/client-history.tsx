@@ -245,48 +245,64 @@ export default function ClientHistory({
                   )}
                 </td>
                 <td>
-                  <div className={op.actions}>
-                    {p.verificationStatus === 'unverified' && p.status !== 'cancelled' && (
-                      <button
-                        className={op.actionReview}
-                        onClick={() =>
-                          openClient(
-                            'verify_installment',
-                            'Verificar situação da parcela',
-                            client,
-                            p,
-                          )
-                        }
-                      >
-                        <ClipboardCheck size={16} /> Verificar situação
-                      </button>
-                    )}
-                    <button
-                      className={op.actionNeutral}
-                      disabled={p.status === 'paid'}
-                      onClick={() => openClient('save_installment', 'Editar parcela', client, p)}
-                    >
-                      <Pencil size={16} /> Editar parcela
-                    </button>
-                    <button
-                      className={op.actionPayment}
-                      disabled={p.status === 'paid' || p.status === 'cancelled'}
-                      onClick={() =>
-                        openClient('confirm_payment', 'Registrar pagamento identificado', client, p)
-                      }
-                    >
-                      <CircleCheck size={16} /> Registrar pagamento
-                    </button>
-                    <button
-                      className={op.actionSchedule}
-                      disabled={p.status === 'paid' || p.status === 'cancelled'}
-                      onClick={() =>
-                        openClient('schedule_payment', 'Registrar previsão de pagamento', client, p)
-                      }
-                    >
-                      <CalendarClock size={16} /> Previsão de pagamento
-                    </button>
-                  </div>
+                  {p.status === 'paid' || p.status === 'cancelled' ? (
+                    <span className={op.installmentNoActions}>
+                      {p.status === 'paid' ? 'Nenhuma ação pendente' : 'Parcela cancelada'}
+                    </span>
+                  ) : (
+                    <div className={op.installmentActions}>
+                      {p.verificationStatus === 'unverified' ? (
+                        <button
+                          className={op.actionReview}
+                          onClick={() =>
+                            openClient('verify_installment', 'Verificar situação da parcela', client, p)
+                          }
+                        >
+                          <ClipboardCheck size={16} /> Verificar situação
+                        </button>
+                      ) : (
+                        <button
+                          className={op.actionPayment}
+                          onClick={() =>
+                            openClient('confirm_payment', 'Registrar pagamento identificado', client, p)
+                          }
+                        >
+                          <CircleCheck size={16} /> Registrar pagamento
+                        </button>
+                      )}
+                      <details className={op.installmentMore}>
+                        <summary>Mais ações</summary>
+                        <div className={op.installmentMoreMenu}>
+                          {p.verificationStatus === 'unverified' && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                openClient('confirm_payment', 'Registrar pagamento identificado', client, p)
+                              }
+                            >
+                              <CircleCheck size={15} /> Registrar pagamento identificado
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              openClient('schedule_payment', 'Registrar previsão de pagamento', client, p)
+                            }
+                          >
+                            <CalendarClock size={15} /> Previsão de pagamento
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              openClient('save_installment', 'Editar parcela', client, p)
+                            }
+                          >
+                            <Pencil size={15} /> Editar parcela
+                          </button>
+                        </div>
+                      </details>
+                    </div>
+                  )}
                 </td>
               </tr>
             ))}

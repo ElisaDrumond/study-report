@@ -335,3 +335,13 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* In the scrollable installment table, expand secondary actions in-flow.
+   Floating menus would be clipped by the table container's overflow-x. */
+.installmentMoreMenu {
+  position: static;
+  width: 100%;
+  min-width: min(220px, 72vw);
+  margin-top: 5px;
+  box-shadow: none;
+}

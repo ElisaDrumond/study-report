@@ -22,3 +22,18 @@ test('geração de parcelas abre modal padrão sem confirmação nativa ou run e
   assert.match(dialog, /name="reference"/);
   assert.match(dialog, /name="confirmed"/);
 });
+
+test('ações de parcelas quitadas não oferecem pagamento ou previsão; opções secundárias ficam agrupadas', () => {
+  const history = fs.readFileSync(
+    path.join(__dirname, '../src/features/operations/client-history.tsx'),
+    'utf8',
+  );
+  assert.match(history, /p\.status === 'paid' \|\| p\.status === 'cancelled'/);
+  assert.match(history, /Nenhuma ação pendente/);
+  assert.match(history, /<details className=\{op\.installmentMore\}>/);
+  assert.match(history, /<summary>Mais ações<\/summary>/);
+  assert.match(history, /p\.verificationStatus === 'unverified'/);
+  assert.match(history, /openClient\('confirm_payment'/);
+  assert.match(history, /openClient\('schedule_payment'/);
+  assert.match(history, /openClient\('save_installment'/);
+});
