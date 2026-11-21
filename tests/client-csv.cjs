@@ -108,11 +108,7 @@ test('importação CSV rejeita cabeçalhos ausentes e registros incompletos', ()
 });
 
 test('importação de valores em USD reconhece cabeçalho exportado e não arredonda centavos', () => {
-  const csv = [
-    'Nome;Valor de cada parcela (USD)',
-    'Ana;450,25',
-    'Bruna;US$ 350.50',
-  ].join('\n');
+  const csv = ['Nome;Valor de cada parcela (USD)', 'Ana;450,25', 'Bruna;US$ 350.50'].join('\n');
   const rows = parseClientsCsv(csv);
   assert.equal(rows[0].installmentAmountCents, '45025');
   assert.equal(rows[1].installmentAmountCents, '35050');

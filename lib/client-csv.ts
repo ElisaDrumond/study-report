@@ -129,11 +129,7 @@ export function parseClientsCsv(source: string): ImportedClientRow[] {
     'quantidade de parcelas',
     'parcelas contratadas',
   );
-  const amountColumn = find(
-    'valor de cada parcela (usd)',
-    'valor da parcela',
-    'valor por parcela',
-  );
+  const amountColumn = find('valor de cada parcela (usd)', 'valor da parcela', 'valor por parcela');
   const frequencyColumn = find('periodicidade', 'frequencia');
   const dueDayColumn = find('dia do vencimento', 'dia habitual do vencimento');
   const firstDueDateColumn = find('primeiro vencimento', 'data do primeiro vencimento');
